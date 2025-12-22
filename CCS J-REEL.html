@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCS - J.Reel | Central Communication System</title>
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4fc3f7;
+            --bg-dark: #0f0f0f;
+            --card-bg: #1e1e1e;
+        }
+
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: #ffffff;
+            padding: 0;
+            margin: 0;
+            padding-bottom: 100px;
+        }
+
+        .header-bar {
+            background-color: var(--card-bg);
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-bar h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: var(--primary-color);
+        }
+
+        .header-bar small {
+            color: #888;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        
+        /* VIDEO SECTION */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .video-card {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #333;
+            transition: border 0.3s;
+        }
+        .video-card:hover {
+            border-color: var(--primary-color);
+        }
+        video { width: 100%; display: block; aspect-ratio: 16/9; }
+
+        /* NEWS SECTION */
+        .news-container {
+            text-align: center;
+            padding: 10px;
+            animation: fadeIn 0.8s ease-in;
+        }
+        .news-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .news-info-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            display: inline-block;
+            border-left: 5px solid var(--primary-color);
+            text-align: left;
+        }
+        .news-time {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        /* BOTTOM NAVBAR */
+        #bottom-nav {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 400px;
+            background-color: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-radius: 35px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            border: 1px solid #444;
+            z-index: 1000;
+        }
+        .nav-item {
+            text-align: center;
+            cursor: pointer;
+            color: #777;
+            transition: 0.3s;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .nav-item.active { color: var(--primary-color); }
+        .nav-text { font-size: 0.75rem; margin-top: 4px; }
+        
+        .data-section { display: none; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <h1>CCS - J.REEL</h1>
+        <small>Central Communication System - ฝาแตก</small>
+    </div>
+
+    <div class="container">
+        <div id="video-section" class="data-section" style="display: block;">
+            <div class="video-grid">
+                <div class="video-card"><video controls src="เงินฝาแตก.mp4"></video></div>
+                <div class="video-card"><video controls src="เพลงชาติ(ชาตินิยม) .mp4"></video></div>
+                <div class="video-card"><video controls src="เดอะโย เรดิโอ (2).mp4"></video></div>
+                <div class="video-card"><video controls src="รีรัน .mp4"></video></div>
+                <div class="video-card"><video controls src="5b6edf7c-2720-451c-8007-eaea60680d72.mp4"></video></div>
+                <div class="video-card"><video controls src="7a98639d-86eb-40ae-84a1-25661735827f.mp4"></video></div>
+                <div class="video-card"><video controls src="d37fc508-52e7-4120-9608-44c0577e58c5.mp4"></video></div>
+                <div class="video-card"><video controls src="6830ccbd-b79f-4217-aafb-1705d245840b.mp4"></video></div>
+                <div class="video-card"><video controls src="9ecb5b94-643d-416f-b271-f324208f5cb2.mp4"></video></div>
+                <div class="video-card"><video controls src="รายการพิเศษช่วงเรื่องเล่าสุดปี .mp4"></video></div>
+                <div class="video-card"><video controls src="3e74e393-b1aa-4ffb-ba24-cfcf0b4816be.mp4"></video></div>
+                <div class="video-card"><video controls src="กีฬาสี ครั้งที่1.mp4"></video></div>
+                <div class="video-card"><video controls src="406e8536-4a21-49fd-8ac9-ec574cb37490.mp4"></video></div>
+                <div class="video-card"><video controls src="เพลงสรรเสริญพระบารมี(ฝ..mp4"></video></div>
+                <div class="video-card"><video controls src="รายการพิเศษ.mp4"></video></div>
+            </div>
+        </div>
+
+        <div id="news-section" class="data-section">
+            <div class="news-container">
+                <img src="5179.jpg" alt="Source: 5179.jpg" class="news-image">
+                <br>
+                <div class="news-info-box">
+                    <span class="news-time">22 / 12 / 3017 (13:00 น.)</span><br>
+                    <span style="color: #ccc;">บันทึกเหตุการณ์ประวัติศาสตร์กรุงฝาแตก</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bottom-nav">
+        <div class="nav-item active" id="nav-video" onclick="showSection('video-section', 'nav-video')">
+            <span class="material-symbols-outlined">movie</span>
+            <span class="nav-text">Reels</span>
+        </div>
+        <div class="nav-item" id="nav-news" onclick="showSection('news-section', 'nav-news')">
+            <span class="material-symbols-outlined">newspaper</span>
+            <span class="nav-text">News Update</span>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId, navId) {
+            document.querySelectorAll('.data-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(sectionId).style.display = 'block';
+            document.getElementById(navId).classList.add('active');
+
+            if (sectionId !== 'video-section') {
+                document.querySelectorAll('video').forEach(v => v.pause());
+            }
+        }
+    </script>
+</body>
+</html>
