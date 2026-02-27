@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สรุปบทเรียนพรีเมียม: พระพุทธ & ภาษาไทย</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <style>
+        :root {
+            --ios-blue: #001F3F; 
+            --ios-gold: #D4AF37;
+            --ios-gold-light: #F4E0A1;
+            --ios-bg: #F2F2F7;
+            --glass: rgba(255, 255, 255, 0.85);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background-color: var(--ios-bg); 
+            margin: 0; padding: env(safe-area-inset-top) 20px 40px 20px;
+            color: var(--ios-blue);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 850px; margin: auto; }
+
+        /* Header iOS 26 Style */
+        header {
+            text-align: center;
+            padding: 50px 20px;
+            background: linear-gradient(135deg, var(--ios-blue) 0%, #003366 100%);
+            color: var(--ios-gold);
+            border-radius: 40px;
+            margin-bottom: 35px;
+            box-shadow: 0 20px 40px rgba(0,31,63,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header h1 { font-family: 'Montserrat', sans-serif; margin: 0; font-size: 2.8em; letter-spacing: -1px; }
+        header p { color: white; opacity: 0.9; font-weight: 300; margin-top: 10px; }
+
+        /* Card Design */
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--ios-blue);
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .section-title i { color: var(--ios-gold); font-size: 1.2em; }
+
+        h3 { 
+            color: var(--ios-blue); 
+            background: var(--ios-gold-light); 
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            margin-top: 25px;
+        }
+
+        /* Badge & Lists */
+        .key-badge {
+            background: var(--ios-blue);
+            color: var(--ios-gold);
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+
+        ul { padding-left: 20px; }
+        li { margin-bottom: 12px; }
+
+        /* Table Style */
+        .table-container { overflow-x: auto; margin: 15px 0; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        th { background: var(--ios-blue); color: var(--ios-gold); padding: 15px; text-align: left; border-radius: 15px 0 0 15px; }
+        td { background: white; padding: 15px; border-radius: 0 15px 15px 0; border-bottom: 1px solid #eee; }
+
+        /* Edit Button */
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .btn-edit {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            color: var(--ios-blue);
+            border: 2px solid var(--ios-blue);
+            padding: 10px 20px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-edit:hover { background: var(--ios-blue); color: var(--ios-gold); }
+
+        /* Comment System */
+        .comment-box {
+            margin-top: 25px;
+            background: rgba(0,0,0,0.03);
+            padding: 20px;
+            border-radius: 20px;
+        }
+        textarea {
+            width: 100%;
+            border-radius: 15px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            font-family: inherit;
+            resize: none;
+            margin-bottom: 10px;
+        }
+        .btn-comment {
+            background: var(--ios-gold);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .footer { text-align: center; margin-top: 50px; padding: 20px; color: #888; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>STUDY NOTES</h1>
+        <p>Premium Academic Summary • 2026</p>
+    </header>
+
+    <div class="card">
+        <div class="section-title">
+            <i class="material-icons-round">settings_brightness</i>
+            <span>๑. วิชาพระพุทธศาสนา</span>
+        </div>
+
+        <h3>หน่วยที่ 9: วันสำคัญและศาสนพิธี</h3>
+        <ul>
+            <li><span class="key-badge">วันมาฆบูชา</span> หัวใจคือ "ไม่ทำชั่ว ทำความดี ทำจิตใจให้บริสุทธิ์" / โอวาทปาติโมกข์ (หลักการ 3) / เพ็ญเดือน 3 / จาตุรงคสันนิบาต (พระสงฆ์ 1,250 รูป)</li>
+            <li><span class="key-badge">วันวิสาขบูชา</span> วันที่น่าอัศจรรย์ ประสูติ ตรัสรู้ ปรินิพพาน ตรงกันในวันเดียว / เพ็ญเดือน 6</li>
+            <li><span class="key-badge">วันอัฏฐมีบูชา</span> วันถวายพระเพลิงพระพุทธสรีระ / แรม 8 ค่ำ เดือน 6</li>
+            <li><span class="key-badge">วันอาสาฬหบูชา</span> แสดงธรรมครั้งแรก (ธัมมจักกัปปวัตตนสูตร) / เกิดพระสงฆ์รูปแรก (พระอัญญาโกณฑัญญะ) / พระรัตนตรัยครบ 3 ประการ / เพ็ญเดือน 8</li>
+            <li><span class="key-badge">วันธรรมสวนะ</span> วันพระ (ขึ้น/แรม 8 และ 15 ค่ำ) รักษาศีล 5 หรือ 8 และฟังธรรม</li>
+        </ul>
+
+        <h3>1.2 ระเบียบพิธีและการปฏิบัติตน</h3>
+        <ul>
+            <li><strong>วันเข้าพรรษา:</strong> พระสงฆ์อยู่จำวัดตลอด 3 เดือน</li>
+            <li><strong>วันออกพรรษา:</strong> ค้างคืนสุดท้าย 1 คืน / ออกจากวัดได้</li>
+            <li><strong>วันเทโวโรหณะ:</strong> "ตักบาตรเทโว" หรือ "ข้าวต้มลูกโยน" ระลึกถึงวันที่เสด็จลงจากสวรรค์ชั้นดาวดึงส์</li>
+        </ul>
+
+        <h3>1.3 ศาสนพิธี</h3>
+        <p>การทำบุญตักบาตร, ถวายภัตตาหาร, ถวายสังฆทาน (ชุดถังเหลือง), การกรวดน้ำ, ทอดกฐิน/ผ้าป่า (ภายใน 1 เดือนหลังออกพรรษา)</p>
+
+        <h3>หน่วยที่ 10: พิธีกรรมศาสนาอื่นๆ</h3>
+        <div class="table-container">
+            <table>
+                <tr><th>ศาสนา</th><th>สาระสำคัญ / Key</th></tr>
+                <tr><td>อิสลาม</td><td>ศรัทธา 6 ปฏิบัติ 5 (ละหมาด 5 เวลา, ถือศีลอดเดือนรอมฎอน, ฮัจญ์)</td></tr>
+                <tr><td>คริสต์</td><td>ศีลศักดิ์สิทธิ์ 7 (ล้างบาป-รับเข้าศาสนา, มหาสนิท-กินขนมปัง/ไวน์แทนกาย/โลหิต)</td></tr>
+                <tr><td>พราหมณ์-ฮินดู</td><td>หลักปฏิบัติ 10 (ธฤติ, บำเพ็ญตบะ), บูชาเทพเจ้า (ศิวะ, นารายณ์, พรหม), พิธีโกนจุก</td></tr>
+                <tr><td>ซิกข์</td><td>เน้นความเสมอภาค, อมฤตสังสการ (ล้างบาปด้วยน้ำอมฤต)</td></tr>
+            </table>
+        </div>
+
+        <div class="btn-group">
+            <a href="https://github.com/USERNAME/REPO/edit/main/index.html" class="btn-edit">
+                <i class="material-icons-round">edit</i> แก้ไขวิชาพระพุทธ
+            </a>
+        </div>
+
+        <div class="comment-box">
+            <textarea placeholder="ลงชื่อและเหตุผลการแก้ไข หรือแสดงความเห็น..."></textarea>
+            <button class="btn-comment"><i class="material-icons-round">send</i> ส่งความเห็น</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">
+            <i class="material-icons-round">auto_stories</i>
+            <span>๒. วิชาภาษาไทย</span>
+        </div>
+
+        <h3>หลักภาษา: การเขียนรายงาน</h3>
+        <p><strong>ขั้นตอนการประชุม (10 ขั้นตอน):</strong></p>
+        <p style="font-size: 0.9em; background: white; padding: 10px; border-radius: 10px; border-left: 4px solid var(--ios-gold);">
+            1. ตั้งกระทู้ → 2. จัดเตรียม → 3. กำหนดวัน → 4. จัดทำวาระ → 5. เริ่มประชุม → 6. อภิปราย → 7. ลงมติ → 8. จดบันทึก → 9. สรุป → 10. ยืนยัน
+        </p>
+
+        <div class="table-container">
+            <table>
+                <tr><th>ส่วนประกอบ</th><th>รายละเอียด</th></tr>
+                <tr><td>ส่วนหน้า</td><td>ปกนอก, ใบรองปก, ปกใน, คำนำ, สารบัญ</td></tr>
+                <tr><td>ส่วนเนื้อหา</td><td>บทนำ, เนื้อหาหลัก, บทสรุป</td></tr>
+                <tr><td>ส่วนท้าย</td><td>
+                    • <b>บรรณานุกรม:</b> บัญชีรายชื่อแหล่งอ้างอิงทั้งหมด<br>
+                    • <b>ภาคผนวก:</b> ข้อมูลเสริมที่ใส่ในเนื้อหาหลักไม่ได้<br>
+                    • <b>อภิธานศัพท์:</b> รวบรวมคำศัพท์ยากพร้อมคำอธิบาย
+                </td></tr>
+            </table>
+        </div>
+
+        <h3>วรรณคดี: นิราศภูเขาทอง</h3>
+        <p><strong>ผู้แต่ง:</strong> สุนทรภู่ (สมัย ร.3 ขณะบวช) | <strong>เส้นทาง:</strong> วัดราชบูรณะ → โรงเหล้า → นนทบุรี → อยุธยา</p>
+        
+        <div style="background: white; padding: 15px; border-radius: 20px;">
+            <strong>สรุปเนื้อหาเจาะลึก:</strong>
+            <ul>
+                <li><strong>(7) ข้อ 1-2:</strong> หน้า 243-244 | กุมภีร์ (จระเข้), บ้านญวน, พระนารายณ์พ่นน้ำ</li>
+                <li><strong>(7) ข้อ 3-4:</strong> หน้า 245 | รำลึก ร.2 (เคยหมอบใกล้), กลิ่นเบญจมาศ</li>
+                <li><strong>(7) ข้อ 5-6:</strong> หน้า 246-247 | รำลึกพระมหากรุณาธิคุณ, การกินโต๊ะ (กินเจี้ยน)</li>
+                <li><strong>(8) ข้อ 1:</strong> หน้า 257-258 | ท่าราบสะเทือน, ผู้ชายมาแต่ตัวยังเขิน</li>
+                <li><strong>(8) ข้อ 2-3:</strong> หน้า 259-269 | ปรัชญาความไม่เที่ยงแท้, คุณค่าด้านวรรณศิลป์</li>
+            </ul>
+        </div>
+
+        <div class="btn-group">
+            <a href="https://github.com/USERNAME/REPO/edit/main/index.html" class="btn-edit">
+                <i class="material-icons-round">edit</i> แก้ไขวิชาภาษาไทย
+            </a>
+        </div>
+
+        <div class="comment-box">
+            <textarea placeholder="ลงชื่อและเหตุผลการแก้ไข หรือแสดงความเห็น..."></textarea>
+            <button class="btn-comment"><i class="material-icons-round">send</i> ส่งความเห็น</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Designed for iOS 26 Concept • Built with Gemini</p>
+        <p>กรุณา <b>ลงชื่อและเหตุผล</b> ทุกครั้งที่มีการแก้ไขเพื่อรักษามาตรฐานข้อมูล</p>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.btn-comment').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const txt = this.parentElement.querySelector('textarea').value;
+            if(txt) {
+                alert('ส่งความเห็นแล้ว! (ข้อความ: ' + txt + ')\n*หมายเหตุ: ใน GitHub Pages ต้องเชื่อมต่อระบบ Database เช่น Firebase เพื่อเก็บข้อมูลจริงครับเพื่อน');
+                this.parentElement.querySelector('textarea').value = '';
+            } else {
+                alert('กรุณาพิมพ์ข้อความก่อนส่งนะเพื่อน!');
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
