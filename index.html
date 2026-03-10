@@ -1,336 +1,115 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Real-time Friend Chat Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #131314; color: #e3e3e3; overflow: hidden; }
-        .chat-container { height: calc(100vh - 160px); }
-        .sidebar { transition: transform 0.3s ease; z-index: 40; }
-        .message-appear { animation: fadeIn 0.2s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #444746; border-radius: 10px; }
-        .reply-box { border-left: 3px solid #4285f4; background: rgba(66, 133, 244, 0.1); }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>เครื่องคำนวณ พันเก้าเล่า V2</title>
+  <style>
+    :root { --primary: #2c3e50; --accent: #3498db; --bg: #ecf0f1; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+    .calc-card { background: #34495e; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 100%; max-width: 400px; color: white; }
+    .screen { background: #bdc3c7; color: #2c3e50; padding: 15px; border-radius: 10px; text-align: right; margin-bottom: 20px; min-height: 60px; }
+    .screen .val { font-size: 24px; font-weight: bold; display: block; }
+    .screen .unit { font-size: 14px; opacity: 0.8; }
+    .grid-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    button { padding: 15px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; transition: 0.2s; background: #5d6d7e; color: white; }
+    button:hover { opacity: 0.8; }
+    button.op { background: var(--accent); }
+    button.wide { grid-column: span 2; background: #e67e22; }
+    select { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; background: #ecf0f1; }
+    .label { font-size: 12px; margin-bottom: 5px; display: block; color: #bdc3c7; }
+    .result-area { margin-top: 20px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; font-size: 14px; }
+    footer { text-align: center; margin-top: 15px; font-size: 11px; color: #bdc3c7; }
+  </style>
 </head>
-<body class="flex h-screen">
+<body>
 
-    <!-- Sidebar (History) -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#1e1f20] border-r border-[#444746] transform -translate-x-full lg:translate-x-0 sidebar flex flex-col">
-        <div class="p-4 border-b border-[#444746] flex justify-between items-center">
-            <h2 class="font-medium text-white">ประวัติการแชท</h2>
-            <button id="closeSidebar" class="lg:hidden text-gray-400">✕</button>
-        </div>
-        <div class="p-3">
-            <button id="newChatBtn" class="w-full flex items-center gap-2 bg-[#2d2f31] hover:bg-[#3d3f42] p-3 rounded-xl text-sm transition-all border border-[#444746]">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-400">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                เริ่มแชทใหม่
-            </button>
-        </div>
-        <div id="historyList" class="flex-1 overflow-y-auto px-3 space-y-2">
-            <!-- History items -->
-        </div>
-        <div class="p-4 text-[10px] text-gray-500 border-t border-[#444746]">
-            ประวัติถูกบันทึกไว้ในเครื่องนี้
-        </div>
-    </aside>
+<div class="calc-card">
+  <h2 style="text-align:center; margin-top:0;">พันเก้าเล่า Calc</h2>
+  
+  <label class="label">โหมดการวัด</label>
+  <select id="mode">
+    <option value="mass">น้ำหนัก (งอบ/เงิบ)</option>
+    <option value="length">ระยะทาง (ทาง/ทาบ)</option>
+    <option value="currency">เงิน (เจ๋ง/เหรียญ)</option>
+  </select>
 
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col lg:ml-72 relative">
-        <!-- Header -->
-        <header class="p-4 flex justify-between items-center border-b border-[#444746] bg-[#131314] z-10">
-            <div class="flex items-center gap-3">
-                <button id="openSidebar" class="lg:hidden p-2 hover:bg-[#2d2f31] rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                    </svg>
-                </button>
-                <div class="w-9 h-9 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                    <svg viewBox="0 0 24 24" fill="white" class="w-5 h-5">
-                        <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="font-medium text-sm text-white">Gemini Pro <span id="roomLabel" class="text-blue-400 text-[10px]"></span></h1>
-                    <p id="statusText" class="text-[10px] text-green-500">ออนไลน์</p>
-                </div>
-            </div>
-            <button id="shareBtn" class="flex items-center gap-2 bg-[#1e1f20] hover:bg-[#333537] px-3 py-1.5 rounded-full border border-[#444746] text-xs transition-all text-gray-200">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 text-blue-400">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0-10.628a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5m0 10.628a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5" />
-                </svg>
-                แชร์ห้องนี้
-            </button>
-        </header>
+  <div class="screen">
+    <div class="unit" id="unitDisplay">เตรียมคำนวณ...</div>
+    <div class="val" id="display">0</div>
+  </div>
 
-        <!-- Chat Area -->
-        <main id="chatWindow" class="chat-container overflow-y-auto p-4 md:px-10 lg:px-20 flex flex-col gap-4">
-            <!-- Messages -->
-        </main>
+  <div class="grid-btns">
+    <button onclick="press('7')">7</button><button onclick="press('8')">8</button><button onclick="press('9')">9</button>
+    <button class="op" onclick="setOp('kg')">KG</button>
+    
+    <button onclick="press('4')">4</button><button onclick="press('5')">5</button><button onclick="press('6')">6</button>
+    <button class="op" onclick="setOp('ngob')">งอบ</button>
+    
+    <button onclick="press('1')">1</button><button onclick="press('2')">2</button><button onclick="press('3')">3</button>
+    <button class="op" onclick="setOp('ngeib')">เงิบ</button>
+    
+    <button onclick="press('0')">0</button><button onclick="press('.')">.</button>
+    <button style="background:#c0392b" onclick="clr()">C</button>
+    <button class="op" onclick="calculate()">=</button>
+    
+    <button class="wide" onclick="calculate()">แปลงค่าทันที</button>
+    <button class="wide" style="background:#27ae60" id="jeungConvert">1 เจ๋ง = 0.6</button>
+  </div>
 
-        <!-- Input Area -->
-        <footer class="p-4 md:px-10 lg:px-20 pb-6 bg-[#131314]">
-            <!-- Reply Preview -->
-            <div id="replyPreview" class="hidden mb-2 p-2 px-4 bg-[#1e1f20] border-l-4 border-blue-500 rounded-lg flex justify-between items-center">
-                <div class="text-xs overflow-hidden">
-                    <p class="text-blue-400 font-medium">กำลังตอบกลับ:</p>
-                    <p id="replyText" class="text-gray-400 truncate"></p>
-                </div>
-                <button id="cancelReply" class="text-gray-500 hover:text-white">✕</button>
-            </div>
+  <div class="result-area" id="result">
+    รอกดตัวเลขและเลือกหน่วย...
+  </div>
 
-            <div class="relative bg-[#1e1f20] border border-[#444746] rounded-3xl flex items-end p-2 px-4 shadow-xl focus-within:border-blue-500 transition-all">
-                <button id="fileBtn" class="p-2 text-gray-400 hover:text-blue-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-                    </svg>
-                </button>
-                <input type="file" id="fileInput" class="hidden" accept="image/*, .pdf, .txt, .doc">
-                
-                <textarea 
-                    id="userInput" 
-                    rows="1" 
-                    placeholder="พิมพ์ข้อความหรือตอบกลับ..." 
-                    class="flex-1 bg-transparent text-white py-2 px-2 focus:outline-none resize-none max-h-32"
-                ></textarea>
-                
-                <button 
-                    id="sendBtn"
-                    disabled
-                    class="p-2 bg-blue-600 rounded-full hover:bg-blue-500 transition-colors disabled:opacity-30 mb-0.5 ml-2"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-white">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                    </svg>
-                </button>
-            </div>
-        </footer>
-    </div>
+  <footer>ข้อมูล ยุคพันเก้าเล่า ที่มีการเปลี่ยนแปลง</footer>
+</div>
 
-    <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
-        <img id="modalImg" class="max-w-full max-h-full rounded-lg shadow-2xl">
-        <button id="closeModal" class="absolute top-4 right-4 text-white text-2xl">✕</button>
-    </div>
+<script>
+  let currentInput = "";
+  const display = document.getElementById('display');
+  const resultArea = document.getElementById('result');
 
-    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-full text-sm opacity-0 transition-opacity pointer-events-none z-50">
-        คัดลอกลิงก์แล้ว!
-    </div>
+  function press(num) {
+    currentInput += num;
+    display.innerText = currentInput;
+  }
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  function clr() {
+    currentInput = "";
+    display.innerText = "0";
+    resultArea.innerText = "ล้างข้อมูลแล้ว";
+  }
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'gemini-pro-chat';
+  function calculate() {
+    let val = parseFloat(currentInput);
+    if (isNaN(val)) return;
 
-        // Elements
-        const chatWindow = document.getElementById('chatWindow');
-        const userInput = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const fileInput = document.getElementById('fileInput');
-        const fileBtn = document.getElementById('fileBtn');
-        const historyList = document.getElementById('historyList');
-        const roomLabel = document.getElementById('roomLabel');
-        const replyPreview = document.getElementById('replyPreview');
-        const replyText = document.getElementById('replyText');
-        const cancelReply = document.getElementById('cancelReply');
+    let mode = document.getElementById('mode').value;
+    let resText = "";
 
-        // State
-        let currentUser = null;
-        let replyingTo = null;
-        const urlParams = new URLSearchParams(window.location.search);
-        let chatId = urlParams.get('room');
+    if (mode === "mass") {
+      // 1 งอบ = 2kg, 1 เงิบ = 1g
+      let kg = val; 
+      resText = `${val} กิโล = ${val/2} งอบ | ${val*1000} เงิบ`;
+    } else if (mode === "length") {
+      // 1 ทาบ = 10m, 1 ทาง = 1000m
+      resText = `${val} เมตร = ${val/10} ทาบ | ${val/1000} ทาง`;
+    } else if (mode === "currency") {
+      // 1 เจ๋ง = 0.6 ตามคำสั่งใหม่
+      resText = `${val} เจ๋ง (เดิม) = ${val * 0.6} เจ๋ง (ใหม่)`;
+    }
 
-        if (!chatId) {
-            chatId = Math.random().toString(36).substring(2, 8);
-        }
-        
-        // Save to Local History
-        function updateHistory(id) {
-            let history = JSON.parse(localStorage.getItem('gemini_chat_history') || '[]');
-            if (!history.includes(id)) {
-                history.unshift(id);
-                localStorage.setItem('gemini_chat_history', JSON.stringify(history.slice(0, 10)));
-            }
-            renderHistory();
-        }
+    resultArea.innerText = resText;
+  }
 
-        function renderHistory() {
-            const history = JSON.parse(localStorage.getItem('gemini_chat_history') || '[]');
-            historyList.innerHTML = '';
-            history.forEach(id => {
-                const item = document.createElement('button');
-                item.className = `w-full text-left p-3 rounded-xl text-xs flex items-center gap-3 transition-all ${id === chatId ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'hover:bg-[#2d2f31] text-gray-400'}`;
-                item.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg> ห้อง: ${id}`;
-                item.onclick = () => {
-                    const baseUrl = window.location.origin + window.location.pathname;
-                    window.location.href = `${baseUrl}?room=${id}`;
-                };
-                historyList.appendChild(item);
-            });
-        }
+  // ฟังก์ชันพิเศษสำหรับ 1 เจ๋ง = 0.6 เจ๋ง
+  document.getElementById('jeungConvert').onclick = function() {
+    let val = parseFloat(currentInput) || 1;
+    let converted = val * 0.6;
+    resultArea.innerText = `แปลงเงิน: ${val} เจ๋ง => ${converted.toFixed(2)} เจ๋ง`;
+  };
+</script>
 
-        // Auth
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                sendBtn.disabled = false;
-                roomLabel.textContent = `(ID: ${chatId})`;
-                updateHistory(chatId);
-                loadMessages();
-            } else {
-                signInAnonymously(auth);
-            }
-        });
-
-        // Load Messages
-        function loadMessages() {
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}`), orderBy('timestamp', 'asc'));
-            onSnapshot(q, (snap) => {
-                chatWindow.innerHTML = '';
-                if(snap.empty) {
-                    const emptyMsg = document.createElement('div');
-                    emptyMsg.className = "text-center text-gray-500 text-xs mt-10";
-                    emptyMsg.innerText = "ยังไม่มีข้อความในห้องนี้ ส่งลิงก์แชร์ให้เพื่อนเลย!";
-                    chatWindow.appendChild(emptyMsg);
-                }
-                snap.forEach(doc => renderMessage(doc.data(), doc.id));
-                chatWindow.scrollTop = chatWindow.scrollHeight;
-            });
-        }
-
-        function renderMessage(data, id) {
-            const isMe = data.senderId === currentUser.uid;
-            const div = document.createElement('div');
-            div.className = `flex flex-col gap-1 message-appear ${isMe ? 'items-end' : 'items-start'}`;
-            
-            let replyHtml = '';
-            if (data.replyTo) {
-                replyHtml = `<div class="text-[10px] text-gray-500 mb-1 italic">ตอบกลับ: "${data.replyTo.substring(0, 30)}..."</div>`;
-            }
-
-            let fileHtml = '';
-            if (data.fileType?.startsWith('image')) {
-                fileHtml = `<img src="${data.fileData}" class="max-w-xs rounded-xl mb-2 cursor-pointer hover:opacity-90" onclick="viewImage('${data.fileData}')">`;
-            } else if (data.fileData) {
-                fileHtml = `<a href="${data.fileData}" download="${data.fileName}" class="flex items-center gap-2 p-2 bg-black/20 rounded-lg text-xs mb-2 text-blue-400">📎 ${data.fileName}</a>`;
-            }
-
-            div.innerHTML = `
-                ${replyHtml}
-                <div class="flex gap-2 max-w-[85%] ${isMe ? 'flex-row-reverse' : ''}">
-                    <div class="w-7 h-7 rounded-full ${isMe ? 'bg-gray-600' : 'bg-blue-600'} flex items-center justify-center text-[8px] flex-shrink-0 mt-1">${isMe ? 'ME' : 'YOU'}</div>
-                    <div class="group relative ${isMe ? 'bg-blue-600 text-white' : 'bg-[#1e1f20] text-gray-200'} p-3 px-4 rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} border border-white/5 shadow-sm">
-                        ${fileHtml}
-                        <p class="text-sm whitespace-pre-wrap leading-relaxed">${data.text || ''}</p>
-                        <button onclick="window.setReply('${data.text || 'ไฟล์แนบ'}')" class="absolute -bottom-6 ${isMe ? 'right-0' : 'left-0'} opacity-0 group-hover:opacity-100 text-[10px] text-blue-400 hover:underline transition-opacity">ตอบกลับ</button>
-                    </div>
-                </div>
-            `;
-            chatWindow.appendChild(div);
-        }
-
-        // Global function for Reply
-        window.setReply = (text) => {
-            replyingTo = text;
-            replyText.textContent = text;
-            replyPreview.classList.remove('hidden');
-            userInput.focus();
-        };
-
-        cancelReply.onclick = () => {
-            replyingTo = null;
-            replyPreview.classList.add('hidden');
-        };
-
-        // Send Message & Files
-        async function handleSend() {
-            const text = userInput.value.trim();
-            const file = fileInput.files[0];
-            if (!text && !file) return;
-
-            let fileObj = null;
-            if (file) {
-                const reader = new FileReader();
-                fileObj = await new Promise(res => {
-                    reader.onload = e => res({ data: e.target.result, name: file.name, type: file.type });
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            userInput.value = '';
-            userInput.style.height = 'auto';
-            fileInput.value = '';
-            const currentReply = replyingTo;
-            cancelReply.onclick();
-
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}`), {
-                    text: text,
-                    senderId: currentUser.uid,
-                    timestamp: serverTimestamp(),
-                    replyTo: currentReply,
-                    fileData: fileObj?.data || null,
-                    fileName: fileObj?.name || null,
-                    fileType: fileObj?.type || null
-                });
-            } catch (e) { console.error(e); }
-        }
-
-        // UI Handlers
-        sendBtn.onclick = handleSend;
-        fileBtn.onclick = () => fileInput.click();
-        document.getElementById('newChatBtn').onclick = () => {
-            const baseUrl = window.location.origin + window.location.pathname;
-            window.location.href = baseUrl;
-        };
-        
-        userInput.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
-        userInput.oninput = function() { this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; };
-
-        // Sidebar logic
-        document.getElementById('openSidebar').onclick = () => document.getElementById('sidebar').classList.remove('-translate-x-full');
-        document.getElementById('closeSidebar').onclick = () => document.getElementById('sidebar').classList.add('-translate-x-full');
-
-        // Fixed Share Link for Github Pages / Custom Domains
-        document.getElementById('shareBtn').onclick = () => {
-            // ดึงเฉพาะ URL หลักโดยไม่เอา query string เดิมมาด้วย
-            const baseUrl = window.location.origin + window.location.pathname;
-            const fullUrl = `${baseUrl}?room=${chatId}`;
-            
-            // ใช้คำสั่ง copy ที่เสถียรกว่า
-            const tempInput = document.createElement('textarea');
-            tempInput.value = fullUrl;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-
-            const toast = document.getElementById('toast');
-            toast.style.opacity = '1';
-            setTimeout(() => toast.style.opacity = '0', 2000);
-        };
-
-        // Modal Image
-        window.viewImage = (src) => {
-            const m = document.getElementById('imageModal');
-            document.getElementById('modalImg').src = src;
-            m.classList.remove('hidden');
-        };
-        document.getElementById('closeModal').onclick = () => document.getElementById('imageModal').classList.add('hidden');
-
-        renderHistory();
-    </script>
 </body>
 </html>
+
