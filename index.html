@@ -174,7 +174,7 @@
                 item.className = `w-full text-left p-3 rounded-xl text-xs flex items-center gap-3 transition-all ${id === chatId ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'hover:bg-[#2d2f31] text-gray-400'}`;
                 item.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg> ห้อง: ${id}`;
                 item.onclick = () => {
-                    const baseUrl = window.location.href.split('?')[0];
+                    const baseUrl = window.location.origin + window.location.pathname;
                     window.location.href = `${baseUrl}?room=${id}`;
                 };
                 historyList.appendChild(item);
@@ -199,6 +199,12 @@
             const q = query(collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}`), orderBy('timestamp', 'asc'));
             onSnapshot(q, (snap) => {
                 chatWindow.innerHTML = '';
+                if(snap.empty) {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.className = "text-center text-gray-500 text-xs mt-10";
+                    emptyMsg.innerText = "ยังไม่มีข้อความในห้องนี้ ส่งลิงก์แชร์ให้เพื่อนเลย!";
+                    chatWindow.appendChild(emptyMsg);
+                }
                 snap.forEach(doc => renderMessage(doc.data(), doc.id));
                 chatWindow.scrollTop = chatWindow.scrollHeight;
             });
@@ -218,7 +224,7 @@
             if (data.fileType?.startsWith('image')) {
                 fileHtml = `<img src="${data.fileData}" class="max-w-xs rounded-xl mb-2 cursor-pointer hover:opacity-90" onclick="viewImage('${data.fileData}')">`;
             } else if (data.fileData) {
-                fileHtml = `<a href="${data.fileData}" download class="flex items-center gap-2 p-2 bg-black/20 rounded-lg text-xs mb-2 text-blue-400">📎 ${data.fileName}</a>`;
+                fileHtml = `<a href="${data.fileData}" download="${data.fileName}" class="flex items-center gap-2 p-2 bg-black/20 rounded-lg text-xs mb-2 text-blue-400">📎 ${data.fileName}</a>`;
             }
 
             div.innerHTML = `
@@ -286,7 +292,7 @@
         sendBtn.onclick = handleSend;
         fileBtn.onclick = () => fileInput.click();
         document.getElementById('newChatBtn').onclick = () => {
-            const baseUrl = window.location.href.split('?')[0];
+            const baseUrl = window.location.origin + window.location.pathname;
             window.location.href = baseUrl;
         };
         
@@ -297,11 +303,23 @@
         document.getElementById('openSidebar').onclick = () => document.getElementById('sidebar').classList.remove('-translate-x-full');
         document.getElementById('closeSidebar').onclick = () => document.getElementById('sidebar').classList.add('-translate-x-full');
 
-        // Share Link
+        // Fixed Share Link for Github Pages / Custom Domains
         document.getElementById('shareBtn').onclick = () => {
-            const url = `${window.location.href.split('?')[0]}?room=${chatId}`;
-            const t = document.createElement('input'); t.value = url; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
-            const toast = document.getElementById('toast'); toast.style.opacity = '1'; setTimeout(() => toast.style.opacity = '0', 2000);
+            // ดึงเฉพาะ URL หลักโดยไม่เอา query string เดิมมาด้วย
+            const baseUrl = window.location.origin + window.location.pathname;
+            const fullUrl = `${baseUrl}?room=${chatId}`;
+            
+            // ใช้คำสั่ง copy ที่เสถียรกว่า
+            const tempInput = document.createElement('textarea');
+            tempInput.value = fullUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const toast = document.getElementById('toast');
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 2000);
         };
 
         // Modal Image
