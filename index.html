@@ -3,534 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>พยากรณ์อากาศและแผนที่</title>
-    
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <script type="text/javascript" src="https://api.longdo.com/map/?key=a663c7be4f51ec99430faa9b1c22ed9e"></script>
-
+    <title>Gemini Real-time Friend Chat Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        /* สไตล์พื้นฐานและ Layout */
-        body { 
-            font-family: 'Kanit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #e3f2fd; 
-            padding: 20px;
-            padding-bottom: 100px; /* เว้นที่ว่างให้ Navbar ด้านล่าง */
-        }
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 20px; /* โค้งมนทั้ง Container */
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15); 
-            /* สำคัญสำหรับการปัด: กำหนดให้ไม่สามารถเลื่อน (Scroll) หน้าได้ในแนวนอน เพื่อดักจับการปัด */
-            overflow-x: hidden; 
-        }
-        h2 { 
-            color: #0d47a1; 
-            border-bottom: 3px solid #1e88e5; 
-            padding-bottom: 15px;
-            margin-bottom: 30px;
-            font-weight: 700;
-        }
-        h3 { 
-            color: #388e3c; 
-            margin-top: 20px;
-            border-bottom: 1px dashed #cccccc; 
-            padding-bottom: 8px; 
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-        .loading { text-align: center; padding: 50px; font-size: 1.2em; color: #666; }
-        .material-symbols-outlined { vertical-align: middle; margin-right: 5px; color: #1e88e5; font-size: 1.4em; }
-        
-        /* 1. CURRENT DATA (โค้งมนและ Hover) */
-        #current-data { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-            gap: 20px; 
-            margin-bottom: 30px; 
-        }
-        .current-item { 
-            background: #eaf1fb; 
-            padding: 20px; 
-            border-radius: 15px; /* โค้งมนขึ้น */
-            border-left: 5px solid #1e88e5;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; 
-        }
-        .current-item:hover {
-            transform: translateY(-5px) scale(1.02); 
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); 
-            background-color: #ffffff; 
-        }
-        .current-item strong { display: block; font-size: 2em; color: #0d47a1; margin-top: 5px; font-weight: 700; }
-
-        /* 2. DAILY CARDS (โค้งมนและ Hover) */
-        #daily-data { 
-            display: flex; 
-            overflow-x: auto; /* การ์ดรายวันยังคงเลื่อนแนวนอนได้ */
-            padding: 10px 0; 
-            gap: 15px;
-            scroll-snap-type: x mandatory; 
-            -webkit-overflow-scrolling: touch; 
-        }
-        .daily-card {
-            flex: 0 0 180px; 
-            background: #ffffff;
-            padding: 15px;
-            border-radius: 15px; /* โค้งมนขึ้น */
-            border: 1px solid #c8e6c9;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease-in-out; 
-        }
-
-        /* 3. HOURLY CONTROLS & TABLE */
-        .control-area button { border-radius: 10px; }
-        #hourly-controls { border-radius: 10px; }
-        #hourly-controls label { border-radius: 8px; }
-        .table-container { 
-            max-height: 500px; 
-            overflow-y: auto; /* **สำคัญ: เลื่อนได้แค่ในกล่องตาราง** */
-            overflow-x: auto; /* **สำคัญ: เลื่อนแนวนอนได้ถ้ามีคอลัมน์เยอะ** */
-            border: 1px solid #ccc; 
-            border-radius: 10px; 
-            margin-top: 15px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #eee;
-            white-space: nowrap; /* ป้องกันข้อความในตารางไม่ให้หักบรรทัด */
-        }
-        th { background-color: #1e88e5; color: white; }
-        .current-hour-highlight { background-color: #ffcc80 !important; font-weight: bold; border-left: 5px solid #ff9800; }
-
-
-        /* 4. MAP SECTION */
-        #map {
-            width: 100%;
-            height: 500px; /* ปรับความสูงแผนที่ */
-            border-radius: 10px;
-            border: 1px solid #ccc;
-        }
-
-        /* 5. BOTTOM NAVBAR */
-        #bottom-nav {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 600px;
-            background-color: #212121;
-            color: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            border-radius: 25px; /* โค้งมนมากเป็นพิเศษ */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-        }
-        .nav-item {
-            flex-grow: 1;
-            text-align: center;
-            padding: 10px 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, color 0.3s;
-            border-radius: 20px;
-            margin: 0 5px;
-        }
-        .nav-item .material-symbols-outlined { color: #9e9e9e; }
-        .nav-item.active {
-            color: #ffffff;
-            background-color: #424242;
-        }
-        .nav-item.active .material-symbols-outlined {
-            color: #ffffff;
-            font-weight: 600;
-        }
-        .nav-text { font-size: 0.8em; font-weight: 500; }
-
-        /* ซ่อนส่วนที่ไม่ต้องการให้แสดง */
-        .data-section { display: none; }
-        #current-section { display: block; }
+        body { font-family: 'Kanit', sans-serif; background-color: #131314; color: #e3e3e3; overflow: hidden; }
+        .chat-container { height: calc(100vh - 160px); }
+        .sidebar { transition: transform 0.3s ease; z-index: 40; }
+        .message-appear { animation: fadeIn 0.2s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #444746; border-radius: 10px; }
+        .reply-box { border-left: 3px solid #4285f4; background: rgba(66, 133, 244, 0.1); }
     </style>
 </head>
-<body>
+<body class="flex h-screen">
 
-    <div class="container">
-        <h2>พยากรณ์อากาศ ณ กรุงเทพมหานคร</h2>
-        <p style="color: #555; margin-bottom: 20px;">**เขตเวลาที่แสดงผล:** Asia/Bangkok (GMT+7) | ข้อมูลจาก Open-Meteo</p>
-
-        <div id="current-section" class="data-section">
-            <h3><span class="material-symbols-outlined">update</span> สภาพอากาศปัจจุบัน (Current Weather)</h3>
-            <div id="current-data">
-                <p class="loading">🔄 กำลังดึงข้อมูลปัจจุบัน...</p>
-            </div>
+    <!-- Sidebar (History) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#1e1f20] border-r border-[#444746] transform -translate-x-full lg:translate-x-0 sidebar flex flex-col">
+        <div class="p-4 border-b border-[#444746] flex justify-between items-center">
+            <h2 class="font-medium text-white">ประวัติการแชท</h2>
+            <button id="closeSidebar" class="lg:hidden text-gray-400">✕</button>
         </div>
-
-        <div id="daily-section" class="data-section">
-            <h3><span class="material-symbols-outlined">calendar_today</span> พยากรณ์รายวัน (Daily Forecast)</h3>
-            <div id="daily-data" class="loading">
-                <p>🔄 กำลังโหลดข้อมูลรายวัน...</p>
-            </div>
+        <div class="p-3">
+            <button id="newChatBtn" class="w-full flex items-center gap-2 bg-[#2d2f31] hover:bg-[#3d3f42] p-3 rounded-xl text-sm transition-all border border-[#444746]">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                เริ่มแชทใหม่
+            </button>
         </div>
+        <div id="historyList" class="flex-1 overflow-y-auto px-3 space-y-2">
+            <!-- History items -->
+        </div>
+        <div class="p-4 text-[10px] text-gray-500 border-t border-[#444746]">
+            ประวัติถูกบันทึกไว้ในเครื่องนี้
+        </div>
+    </aside>
 
-        <div id="hourly-section" class="data-section">
-            <h3><span class="material-symbols-outlined">schedule</span> พยากรณ์รายชั่วโมง (Hourly Forecast)</h3>
-
-            <div class="control-area">
-                <button class="quick-select-btn" onclick="selectPopularVariables()">ตัวแปรยอดนิยม</button> 
-                <button class="select-all-btn" style="background-color: #4CAF50;" onclick="toggleAllCheckboxes(true)">เลือกทั้งหมด</button>
-                <button class="select-all-btn" style="background-color: #f44336;" onclick="toggleAllCheckboxes(false)">ยกเลิกทั้งหมด</button>
-            </div>
-            
-            <div id="hourly-controls">
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col lg:ml-72 relative">
+        <!-- Header -->
+        <header class="p-4 flex justify-between items-center border-b border-[#444746] bg-[#131314] z-10">
+            <div class="flex items-center gap-3">
+                <button id="openSidebar" class="lg:hidden p-2 hover:bg-[#2d2f31] rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+                <div class="w-9 h-9 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                    <svg viewBox="0 0 24 24" fill="white" class="w-5 h-5">
+                        <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+                    </svg>
                 </div>
-
-            <button onclick="displayHourlyData()" style="padding: 10px 20px; background-color: #1e88e5; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 15px;">แสดง/รีเฟรช ตารางพยากรณ์</button>
-            
-            <div id="hourly-output" class="loading">
-                <p>โปรดเลือกตัวแปรและกดปุ่มด้านบนเพื่อดูรายละเอียดรายชั่วโมง</p>
-            </div>
-        </div>
-
-        <div id="map-section" class="data-section">
-            <h3><span class="material-symbols-outlined">map</span> แผนที่ (Map)</h3>
-            <div id="map">
+                <div>
+                    <h1 class="font-medium text-sm text-white">Gemini Pro <span id="roomLabel" class="text-blue-400 text-[10px]"></span></h1>
+                    <p id="statusText" class="text-[10px] text-green-500">ออนไลน์</p>
                 </div>
-        </div>
+            </div>
+            <button id="shareBtn" class="flex items-center gap-2 bg-[#1e1f20] hover:bg-[#333537] px-3 py-1.5 rounded-full border border-[#444746] text-xs transition-all text-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 text-blue-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0-10.628a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5m0 10.628a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5" />
+                </svg>
+                แชร์ห้องนี้
+            </button>
+        </header>
 
-    </div>
+        <!-- Chat Area -->
+        <main id="chatWindow" class="chat-container overflow-y-auto p-4 md:px-10 lg:px-20 flex flex-col gap-4">
+            <!-- Messages -->
+        </main>
 
-    <div id="bottom-nav">
-        <div class="nav-item active" id="nav-current" onclick="showSection('current-section', 'nav-current')">
-            <span class="material-symbols-outlined">update</span>
-            <span class="nav-text">ปัจจุบัน</span>
-        </div>
-        <div class="nav-item" id="nav-daily" onclick="showSection('daily-section', 'nav-daily')">
-            <span class="material-symbols-outlined">calendar_today</span>
-            <span class="nav-text">รายวัน</span>
-        </div>
-        <div class="nav-item" id="nav-hourly" onclick="showSection('hourly-section', 'nav-hourly')">
-            <span class="material-symbols-outlined">schedule</span>
-            <span class="nav-text">รายชั่วโมง</span>
-        </div>
-        <div class="nav-item" id="nav-map" onclick="showSection('map-section', 'nav-map')">
-            <span class="material-symbols-outlined">map</span>
-            <span class="nav-text">แผนที่</span>
-        </div>
-    </div>
+        <!-- Input Area -->
+        <footer class="p-4 md:px-10 lg:px-20 pb-6 bg-[#131314]">
+            <!-- Reply Preview -->
+            <div id="replyPreview" class="hidden mb-2 p-2 px-4 bg-[#1e1f20] border-l-4 border-blue-500 rounded-lg flex justify-between items-center">
+                <div class="text-xs overflow-hidden">
+                    <p class="text-blue-400 font-medium">กำลังตอบกลับ:</p>
+                    <p id="replyText" class="text-gray-400 truncate"></p>
+                </div>
+                <button id="cancelReply" class="text-gray-500 hover:text-white">✕</button>
+            </div>
 
-
-    <script>
-        const API_URL = "https://api.open-meteo.com/v1/forecast";
-        let apiData = null; 
-        let mapInstance = null; // เก็บ Instance ของแผนที่ Longdo
-        
-        const now = new Date(); 
-        const currentHourStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0).toISOString().slice(0, 16); 
-
-        // ==========================================
-        // ข้อมูลหลักสำหรับ API และ UI
-        // ==========================================
-        const LATITUDE = 13.7563;
-        const LONGITUDE = 100.5018;
-        // อัปเดตรายการ Sections และ Navs
-        const sections = ['current-section', 'daily-section', 'hourly-section', 'map-section'];
-        const navs = ['nav-current', 'nav-daily', 'nav-hourly', 'nav-map'];
-        
-        const HOURLY_VARIABLES = ["temperature_2m", "rain", "weather_code", "pressure_msl", "relative_humidity_2m", "dew_point_2m", "apparent_temperature", "precipitation_probability", "precipitation", "showers", "snowfall", "snow_depth", "surface_pressure", "cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high", "visibility", "evapotranspiration", "et0_fao_evapotranspiration", "vapour_pressure_deficit"];
-        const CURRENT_VARIABLES = ["temperature_2m", "apparent_temperature", "relative_humidity_2m", "weather_code", "is_day", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m", "pressure_msl", "surface_pressure", "rain", "showers", "snowfall", "precipitation"];
-        const DAILY_VARIABLES = ["weather_code", "temperature_2m_max", "temperature_2m_min", "apparent_temperature_max", "apparent_temperature_min", "sunrise", "sunset", "uv_index_max", "precipitation_sum", "wind_speed_10m_max", "wind_gusts_10m_max"];
-        const POPULAR_HOURLY_VARS = ["temperature_2m", "apparent_temperature", "relative_humidity_2m", "precipitation_probability", "rain", "wind_speed_10m", "weather_code"];
-        
-        const DISPLAY_INFO = {
-            "temperature_2m": { name: "อุณหภูมิ (2 ม.)", icon: "device_thermostat" }, "apparent_temperature": { name: "อุณหภูมิรู้สึกได้", icon: "thermostat" }, "relative_humidity_2m": { name: "ความชื้นสัมพัทธ์", icon: "humidity_mid" }, "weather_code": { name: "สภาพอากาศ", icon: "cloudy_snowing" }, "is_day": { name: "สถานะ", icon: "light_mode" }, "wind_speed_10m": { name: "ความเร็วลม", icon: "air" }, "wind_direction_10m": { name: "ทิศทางลม", icon: "explore" }, "wind_gusts_10m": { name: "ลมกระโชก", icon: "tsunami" }, "pressure_msl": { name: "ความดัน (ทะเล)", icon: "speed" }, "surface_pressure": { name: "ความดัน (พื้นผิว)", icon: "speed" }, "rain": { name: "ฝน", icon: "rainy" }, "showers": { name: "ฝนโปรย", icon: "rainy" }, "snowfall": { name: "หิมะตก", icon: "ac_unit" }, "precipitation": { name: "ปริมาณน้ำฟ้า", icon: "water_drop" }, "dew_point_2m": { name: "จุดน้ำค้าง", icon: "dew_point" }, "precipitation_probability": { name: "โอกาสเกิดน้ำฟ้า", icon: "percent" }, "snow_depth": { name: "ความลึกหิมะ", icon: "layers" }, "cloud_cover": { name: "เมฆรวม", icon: "cloudy" }, "visibility": { name: "ทัศนวิสัย", icon: "visibility" }, "evapotranspiration": { name: "การระเหยคายน้ำ", icon: "water_do" }, "et0_fao_evapotranspiration": { name: "การระเหยคายน้ำอ้างอิง", icon: "water_do" }, "vapour_pressure_deficit": { name: "ค่าขาดดุลไอน้ำ", icon: "compress" }, "temperature_2m_max": { name: "สูงสุด", icon: "arrow_upward" }, "temperature_2m_min": { name: "ต่ำสุด", icon: "arrow_downward" }, "sunrise": { name: "พระอาทิตย์ขึ้น", icon: "wb_sunny" }, "sunset": { name: "พระอาทิตย์ตก", icon: "nights_stay" }, "uv_index_max": { name: "ดัชนี UV (สูงสุด)", icon: "wb_incandescent" }, "precipitation_sum": { name: "น้ำฟ้าสะสม", icon: "water_drop" }, "wind_speed_10m_max": { name: "ความเร็วลม (สูงสุด)", icon: "air" }, "wind_gusts_10m_max": { name: "ลมกระโชก (สูงสุด)", icon: "tsunami" }, "cloud_cover_low": { name: "เมฆต่ำ", icon: "cloudy" }, "cloud_cover_mid": { name: "เมฆกลาง", icon: "cloudy" }, "cloud_cover_high": { name: "เมฆสูง", icon: "cloudy" },
-        };
-        
-        // ==========================================
-        // ฟังก์ชันควบคุม Navbar และการแสดงผล
-        // ==========================================
-        function showSection(sectionId, navId) {
-            // ซ่อนทุก Section
-            document.querySelectorAll('.data-section').forEach(section => {
-                section.style.display = 'none';
-            });
-
-            // เอา Active Class ออกจาก Navbar ทั้งหมด
-            document.querySelectorAll('.nav-item').forEach(navItem => {
-                navItem.classList.remove('active');
-            });
-
-            // แสดง Section ที่ต้องการ
-            document.getElementById(sectionId).style.display = 'block';
-
-            // เพิ่ม Active Class ให้ Navbar ที่ถูกกด
-            document.getElementById(navId).classList.add('active');
-
-            // โหลดแผนที่เมื่อเข้าสู่ Section แผนที่เท่านั้น
-            if (sectionId === 'map-section' && !mapInstance) {
-                initMap();
-            }
-        }
-
-        // ==========================================
-        // Longdo Map Initialization
-        // ==========================================
-        function initMap() {
-            // สร้างแผนที่และกำหนดจุดศูนย์กลาง (พิกัดเดียวกับพยากรณ์อากาศ) และระดับการซูม
-            if (typeof longdo !== 'undefined' && longdo.Map) {
-                mapInstance = new longdo.Map({
-                    placeholder: document.getElementById('map'),
-                    language: 'th', // กำหนดภาษาเป็นภาษาไทย
-                    // ใช้พิกัดเดียวกับพยากรณ์อากาศ: กรุงเทพมหานคร (100.5018, 13.7563)
-                    location: { lon: LONGITUDE, lat: LATITUDE }, 
-                    zoom: 12 // ระดับการซูมเริ่มต้น
-                });
+            <div class="relative bg-[#1e1f20] border border-[#444746] rounded-3xl flex items-end p-2 px-4 shadow-xl focus-within:border-blue-500 transition-all">
+                <button id="fileBtn" class="p-2 text-gray-400 hover:text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                    </svg>
+                </button>
+                <input type="file" id="fileInput" class="hidden" accept="image/*, .pdf, .txt, .doc">
                 
-                // เพิ่ม Marker ที่ตำแหน่งพยากรณ์อากาศ
-                mapInstance.Event.bind('ready', function() {
-                    mapInstance.Pan(longdo.Location(LONGITUDE, LATITUDE));
-                    mapInstance.Zoom(12);
-                    mapInstance.add(new longdo.Marker({ lon: LONGITUDE, lat: LATITUDE }, {
-                        title: 'พยากรณ์อากาศ ณ จุดนี้',
-                        detail: 'กรุงเทพมหานคร'
-                    }));
-                });
-            } else {
-                console.error("Longdo Map API ยังไม่ถูกโหลดสมบูรณ์");
-                document.getElementById('map').innerHTML = `<p style="color: red; padding: 20px;">❌ ไม่สามารถโหลด Longdo Map API ได้</p>`;
-            }
-        }
+                <textarea 
+                    id="userInput" 
+                    rows="1" 
+                    placeholder="พิมพ์ข้อความหรือตอบกลับ..." 
+                    class="flex-1 bg-transparent text-white py-2 px-2 focus:outline-none resize-none max-h-32"
+                ></textarea>
+                
+                <button 
+                    id="sendBtn"
+                    disabled
+                    class="p-2 bg-blue-600 rounded-full hover:bg-blue-500 transition-colors disabled:opacity-30 mb-0.5 ml-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-white">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                    </svg>
+                </button>
+            </div>
+        </footer>
+    </div>
 
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <img id="modalImg" class="max-w-full max-h-full rounded-lg shadow-2xl">
+        <button id="closeModal" class="absolute top-4 right-4 text-white text-2xl">✕</button>
+    </div>
 
-        // ==========================================
-        // SWIPE GESTURE LOGIC 
-        // ==========================================
-        let touchstartX = 0;
-        let touchendX = 0;
-        const SWIPE_THRESHOLD = 80; // กำหนดระยะห่างขั้นต่ำในการปัด (เป็น Pixel)
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-2 rounded-full text-sm opacity-0 transition-opacity pointer-events-none z-50">
+        คัดลอกลิงก์แล้ว!
+    </div>
 
-        function handleGesture() {
-            const deltaX = touchendX - touchstartX;
-            if (Math.abs(deltaX) < SWIPE_THRESHOLD) return; 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-            // หาว่าตอนนี้กำลังอยู่ Section ไหน
-            let currentSectionId = '';
-            document.querySelectorAll('.data-section').forEach(section => {
-                // เช็คว่า section ไหนถูกแสดงอยู่ (display: block)
-                if (section.style.display === 'block' || section.style.display === '') {
-                    currentSectionId = section.id;
-                }
-            });
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'gemini-pro-chat';
 
-            let currentIndex = sections.indexOf(currentSectionId);
-            let newIndex = currentIndex;
+        // Elements
+        const chatWindow = document.getElementById('chatWindow');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fileBtn = document.getElementById('fileBtn');
+        const historyList = document.getElementById('historyList');
+        const roomLabel = document.getElementById('roomLabel');
+        const replyPreview = document.getElementById('replyPreview');
+        const replyText = document.getElementById('replyText');
+        const cancelReply = document.getElementById('cancelReply');
 
-            if (deltaX < 0) { // ปัดซ้าย: ไป Section ถัดไป (e.g., Current -> Daily)
-                newIndex = Math.min(currentIndex + 1, sections.length - 1);
-            } else if (deltaX > 0) { // ปัดขวา: ไป Section ก่อนหน้า (e.g., Daily -> Current)
-                newIndex = Math.max(currentIndex - 1, 0);
-            }
+        // State
+        let currentUser = null;
+        let replyingTo = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        let chatId = urlParams.get('room');
 
-            if (newIndex !== currentIndex) {
-                // สลับ Section ผ่านฟังก์ชันหลัก
-                showSection(sections[newIndex], navs[newIndex]);
-            }
+        if (!chatId) {
+            chatId = Math.random().toString(36).substring(2, 8);
         }
         
-        // ==========================================
-        // ฟังก์ชันดึงข้อมูล API (ย่อลงเพื่อความกระชับ)
-        // ==========================================
-        function getDisplayName(key) { return DISPLAY_INFO[key] ? DISPLAY_INFO[key].name : key; }
-        function getIcon(key) { return DISPLAY_INFO[key] ? `<span class="material-symbols-outlined">${DISPLAY_INFO[key].icon}</span>` : ''; }
-        function buildQueryString(params) {
-            let parts = [];
-            for (const key in params) {
-                if (Array.isArray(params[key])) {
-                    parts.push(encodeURIComponent(key) + '=' + params[key].join(','));
-                } else {
-                    parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
-                }
+        // Save to Local History
+        function updateHistory(id) {
+            let history = JSON.parse(localStorage.getItem('gemini_chat_history') || '[]');
+            if (!history.includes(id)) {
+                history.unshift(id);
+                localStorage.setItem('gemini_chat_history', JSON.stringify(history.slice(0, 10)));
             }
-            return parts.join('&');
+            renderHistory();
         }
 
-        async function fetchWeatherData() {
-            // ... (โค้ดเรียก API เหมือนเดิม) ...
-            const currentOutput = document.getElementById('current-data');
-            const dailyOutput = document.getElementById('daily-data');
-            const params = {
-                "latitude": LATITUDE, "longitude": LONGITUDE, "hourly": HOURLY_VARIABLES, 
-                "current": CURRENT_VARIABLES, "daily": DAILY_VARIABLES, "timezone": "Asia/Bangkok",
-            };
-            const urlWithParams = `${API_URL}?${buildQueryString(params)}`;
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('gemini_chat_history') || '[]');
+            historyList.innerHTML = '';
+            history.forEach(id => {
+                const item = document.createElement('button');
+                item.className = `w-full text-left p-3 rounded-xl text-xs flex items-center gap-3 transition-all ${id === chatId ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'hover:bg-[#2d2f31] text-gray-400'}`;
+                item.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg> ห้อง: ${id}`;
+                item.onclick = () => {
+                    const baseUrl = window.location.href.split('?')[0];
+                    window.location.href = `${baseUrl}?room=${id}`;
+                };
+                historyList.appendChild(item);
+            });
+        }
+
+        // Auth
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                sendBtn.disabled = false;
+                roomLabel.textContent = `(ID: ${chatId})`;
+                updateHistory(chatId);
+                loadMessages();
+            } else {
+                signInAnonymously(auth);
+            }
+        });
+
+        // Load Messages
+        function loadMessages() {
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}`), orderBy('timestamp', 'asc'));
+            onSnapshot(q, (snap) => {
+                chatWindow.innerHTML = '';
+                snap.forEach(doc => renderMessage(doc.data(), doc.id));
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            });
+        }
+
+        function renderMessage(data, id) {
+            const isMe = data.senderId === currentUser.uid;
+            const div = document.createElement('div');
+            div.className = `flex flex-col gap-1 message-appear ${isMe ? 'items-end' : 'items-start'}`;
+            
+            let replyHtml = '';
+            if (data.replyTo) {
+                replyHtml = `<div class="text-[10px] text-gray-500 mb-1 italic">ตอบกลับ: "${data.replyTo.substring(0, 30)}..."</div>`;
+            }
+
+            let fileHtml = '';
+            if (data.fileType?.startsWith('image')) {
+                fileHtml = `<img src="${data.fileData}" class="max-w-xs rounded-xl mb-2 cursor-pointer hover:opacity-90" onclick="viewImage('${data.fileData}')">`;
+            } else if (data.fileData) {
+                fileHtml = `<a href="${data.fileData}" download class="flex items-center gap-2 p-2 bg-black/20 rounded-lg text-xs mb-2 text-blue-400">📎 ${data.fileName}</a>`;
+            }
+
+            div.innerHTML = `
+                ${replyHtml}
+                <div class="flex gap-2 max-w-[85%] ${isMe ? 'flex-row-reverse' : ''}">
+                    <div class="w-7 h-7 rounded-full ${isMe ? 'bg-gray-600' : 'bg-blue-600'} flex items-center justify-center text-[8px] flex-shrink-0 mt-1">${isMe ? 'ME' : 'YOU'}</div>
+                    <div class="group relative ${isMe ? 'bg-blue-600 text-white' : 'bg-[#1e1f20] text-gray-200'} p-3 px-4 rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} border border-white/5 shadow-sm">
+                        ${fileHtml}
+                        <p class="text-sm whitespace-pre-wrap leading-relaxed">${data.text || ''}</p>
+                        <button onclick="window.setReply('${data.text || 'ไฟล์แนบ'}')" class="absolute -bottom-6 ${isMe ? 'right-0' : 'left-0'} opacity-0 group-hover:opacity-100 text-[10px] text-blue-400 hover:underline transition-opacity">ตอบกลับ</button>
+                    </div>
+                </div>
+            `;
+            chatWindow.appendChild(div);
+        }
+
+        // Global function for Reply
+        window.setReply = (text) => {
+            replyingTo = text;
+            replyText.textContent = text;
+            replyPreview.classList.remove('hidden');
+            userInput.focus();
+        };
+
+        cancelReply.onclick = () => {
+            replyingTo = null;
+            replyPreview.classList.add('hidden');
+        };
+
+        // Send Message & Files
+        async function handleSend() {
+            const text = userInput.value.trim();
+            const file = fileInput.files[0];
+            if (!text && !file) return;
+
+            let fileObj = null;
+            if (file) {
+                const reader = new FileReader();
+                fileObj = await new Promise(res => {
+                    reader.onload = e => res({ data: e.target.result, name: file.name, type: file.type });
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            fileInput.value = '';
+            const currentReply = replyingTo;
+            cancelReply.onclick();
 
             try {
-                const response = await fetch(urlWithParams);
-                if (!response.ok) { throw new Error(`HTTP Error! Status: ${response.status}`); }
-                apiData = await response.json(); 
-                
-                displayCurrentData(apiData);
-                displayDailyData(apiData); 
-                createHourlyControls(); 
-                selectPopularVariables(); 
-            } catch (error) {
-                console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", error);
-                currentOutput.innerHTML = `<p style="color: red;">❌ เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}</p>`;
-                dailyOutput.innerHTML = `<p style="color: red;">❌ ไม่สามารถโหลดข้อมูลรายวันได้</p>`;
-            }
-        }
-
-        function displayCurrentData(data) {
-            // ... (โค้ดแสดง Current Data เหมือนเดิม) ...
-            const currentOutput = document.getElementById('current-data');
-            const current = data.current;
-            const currentUnits = data.current_units;
-            let html = '';
-            const displayOrder = ["temperature_2m", "apparent_temperature", "relative_humidity_2m", "weather_code", "wind_speed_10m", "wind_gusts_10m", "rain", "precipitation", "pressure_msl", "is_day"];
-            displayOrder.forEach(key => {
-                const label = getDisplayName(key);
-                let value = current[key];
-                const unit = currentUnits[key] || '';
-                const icon = getIcon(key);
-                let displayValue = value;
-                if (key === 'is_day') {
-                    displayValue = value === 1 ? 'กลางวัน' : 'กลางคืน';
-                } else if (typeof value === 'number') {
-                    displayValue = value.toFixed(value % 1 === 0 ? 0 : 2);
-                }
-                html += `<div class="current-item"><span style="font-size: 0.9em; color: #555;">${icon} ${label}</span><strong>${displayValue} ${unit}</strong></div>`;
-            });
-            currentOutput.innerHTML = html;
-        }
-
-        function displayDailyData(data) {
-            // ... (โค้ดแสดง Daily Data เหมือนเดิม) ...
-            const dailyOutput = document.getElementById('daily-data');
-            const daily = data.daily;
-            const dailyUnits = data.daily_units;
-            let html = '';
-            const wmoIcons = { 0: { icon: "sunny", color: "#ffb300" }, 1: { icon: "partly_cloudy_day", color: "#ffb300" }, 2: { icon: "partly_cloudy_day", color: "#ffb300" }, 3: { icon: "cloud", color: "#42a5f5" }, 45: { icon: "foggy", color: "#9e9e9e" }, 51: { icon: "rainy", color: "#4caf50" }, 61: { icon: "rainy", color: "#4caf50" }, 65: { icon: "thunderstorm", color: "#e53935" }, 71: { icon: "ac_unit", color: "#1e88e5" }, 80: { icon: "rainy", color: "#4caf50" }, 81: { icon: "rainy", color: "#4caf50" }, 95: { icon: "thunderstorm", color: "#e53935" }, 96: { icon: "thunderstorm", color: "#e53935" }, };
-            dailyOutput.classList.remove('loading');
-            for (let i = 0; i < daily.time.length; i++) {
-                const time = new Date(daily.time[i]);
-                const weatherCode = daily.weather_code[i];
-                const sunriseTime = new Date(daily.sunrise[i] * 1000).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
-                const sunsetTime = new Date(daily.sunset[i] * 1000).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
-                const maxTemp = daily.temperature_2m_max[i].toFixed(0);
-                const minTemp = daily.temperature_2m_min[i].toFixed(0);
-                const iconInfo = wmoIcons[weatherCode] || wmoIcons[0]; 
-                html += `<div class="daily-card" tabindex="0"><h4>${time.toLocaleDateString('th-TH', { weekday: 'short', month: 'numeric', day: 'numeric' })}</h4><span class="material-symbols-outlined icon" style="color: ${iconInfo.color}">${iconInfo.icon}</span><div class="temp">${maxTemp}° ${dailyUnits.temperature_2m_max}</div><div class="min-temp">${minTemp}° ${dailyUnits.temperature_2m_min} (Min)</div><small>ฝน: ${daily.precipitation_sum[i].toFixed(1)} ${dailyUnits.precipitation_sum}</small><small style="display:block; margin-top:5px;">🌅 ${sunriseTime} | 🌇 ${sunsetTime}</small></div>`;
-            }
-            dailyOutput.innerHTML = html;
-        }
-
-        function createHourlyControls() {
-            // ... (โค้ดสร้าง Checkbox เหมือนเดิม) ...
-            const controlsElement = document.getElementById('hourly-controls');
-            let html = '';
-            HOURLY_VARIABLES.forEach(key => {
-                const label = getDisplayName(key);
-                const isChecked = ''; 
-                html += `<input type="checkbox" id="${key}" name="hourly_var" value="${key}" ${isChecked}><label for="${key}">${label}</label>`;
-            });
-            controlsElement.innerHTML = html;
-        }
-
-        function selectPopularVariables() {
-            // ... (โค้ด Quick Select เหมือนเดิม) ...
-            toggleAllCheckboxes(false);
-            POPULAR_HOURLY_VARS.forEach(key => {
-                const cb = document.getElementById(key);
-                if (cb) { cb.checked = true; }
-            });
-            displayHourlyData(); 
-        }
-
-        function toggleAllCheckboxes(check) {
-            const checkboxes = document.querySelectorAll('#hourly-controls input[type="checkbox"]');
-            checkboxes.forEach(cb => cb.checked = check);
-        }
-        
-        function displayHourlyData() {
-            // ... (โค้ดแสดงตาราง Hourly เหมือนเดิม) ...
-            const hourlyOutput = document.getElementById('hourly-output');
-            if (!apiData) { hourlyOutput.innerHTML = `<p style="color: red;">❌ ข้อมูลยังไม่ถูกโหลดสมบูรณ์</p>`; return; }
-            const selectedVars = Array.from(document.querySelectorAll('#hourly-controls input[type="checkbox"]:checked')).map(cb => cb.value);
-            if (selectedVars.length === 0) { hourlyOutput.innerHTML = `<p style="color: orange;">⚠️ กรุณาเลือกตัวแปรอย่างน้อย 1 ตัวเพื่อแสดงตาราง</p>`; return; }
-            const hourly = apiData.hourly;
-            const hourlyUnits = apiData.hourly_units;
-            
-            let tableHTML = `<div class="table-container"><table><thead><tr><th>เวลา (GMT+7)</th>`;
-            selectedVars.forEach(key => {
-                const label = getDisplayName(key);
-                const unit = hourlyUnits[key] || '';
-                const icon = getIcon(key);
-                tableHTML += `<th>${icon} ${label} (${unit})</th>`;
-            });
-            tableHTML += `</tr></thead><tbody>`;
-
-            const times = hourly.time;
-            for (let i = 0; i < times.length; i++) {
-                const apiHourStart = times[i].slice(0, 16); 
-                const isCurrentHour = apiHourStart === currentHourStart; 
-                const rowClass = isCurrentHour ? 'current-hour-highlight' : '';
-                
-                const dateTime = new Date(times[i]);
-                const formattedTime = dateTime.toLocaleString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
-                let rowData = `<td>${formattedTime}</td>`;
-                
-                selectedVars.forEach(key => {
-                    let value = hourly[key][i];
-                    if (typeof value === 'number') { value = value.toFixed(value % 1 === 0 ? 0 : 2); }
-                    rowData += `<td>${value}</td>`;
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}`), {
+                    text: text,
+                    senderId: currentUser.uid,
+                    timestamp: serverTimestamp(),
+                    replyTo: currentReply,
+                    fileData: fileObj?.data || null,
+                    fileName: fileObj?.name || null,
+                    fileType: fileObj?.type || null
                 });
-                
-                tableHTML += `<tr class="${rowClass}">${rowData}</tr>`;
-            }
-
-            tableHTML += `</tbody></table></div>`;
-            hourlyOutput.innerHTML = tableHTML;
-            
-            if (document.querySelector('.current-hour-highlight')) {
-                 const tableContainer = document.querySelector('.table-container');
-                 const highlightRow = document.querySelector('.current-hour-highlight');
-                 if (tableContainer && highlightRow) {
-                     tableContainer.scrollTop = highlightRow.offsetTop - tableContainer.offsetTop - (tableContainer.clientHeight / 3);
-                 }
-            }
+            } catch (e) { console.error(e); }
         }
 
-        // เริ่มต้นการทำงานเมื่อหน้าเว็บโหลดเสร็จ และเพิ่ม Event Listener สำหรับ Swipe
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchWeatherData();
-            const mainContainer = document.querySelector('.container');
+        // UI Handlers
+        sendBtn.onclick = handleSend;
+        fileBtn.onclick = () => fileInput.click();
+        document.getElementById('newChatBtn').onclick = () => {
+            const baseUrl = window.location.href.split('?')[0];
+            window.location.href = baseUrl;
+        };
+        
+        userInput.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
+        userInput.oninput = function() { this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; };
 
-            // ดักจับจุดเริ่มต้นการสัมผัส
-            mainContainer.addEventListener('touchstart', e => {
-                // ต้องแน่ใจว่าไม่ได้ปัดบนพื้นที่ที่ควรเลื่อนแนวนอนได้ (เช่น Daily Cards หรือ Table Container)
-                if (e.target.closest('#daily-data') || e.target.closest('.table-container') || e.target.closest('#map')) {
-                    // ถ้ากำลังปัดในพื้นที่ที่ควรเลื่อนแนวนอน/ซูมได้ ให้ข้าม Swipe Navigation
-                    touchstartX = 0;
-                    touchendX = 0;
-                    return;
-                }
-                touchstartX = e.changedTouches[0].screenX;
-            }, false);
+        // Sidebar logic
+        document.getElementById('openSidebar').onclick = () => document.getElementById('sidebar').classList.remove('-translate-x-full');
+        document.getElementById('closeSidebar').onclick = () => document.getElementById('sidebar').classList.add('-translate-x-full');
 
-            // ดักจับจุดสิ้นสุดการสัมผัส และเรียกใช้ฟังก์ชันจัดการการปัด
-            mainContainer.addEventListener('touchend', e => {
-                if (touchstartX === 0) return; // ถ้าไม่ได้เริ่มจับ (เพราะปัดบน Daily Card หรือ Table/Map) ให้ข้าม
-                touchendX = e.changedTouches[0].screenX;
-                handleGesture();
-            }, false);
-        });
+        // Share Link
+        document.getElementById('shareBtn').onclick = () => {
+            const url = `${window.location.href.split('?')[0]}?room=${chatId}`;
+            const t = document.createElement('input'); t.value = url; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+            const toast = document.getElementById('toast'); toast.style.opacity = '1'; setTimeout(() => toast.style.opacity = '0', 2000);
+        };
+
+        // Modal Image
+        window.viewImage = (src) => {
+            const m = document.getElementById('imageModal');
+            document.getElementById('modalImg').src = src;
+            m.classList.remove('hidden');
+        };
+        document.getElementById('closeModal').onclick = () => document.getElementById('imageModal').classList.add('hidden');
+
+        renderHistory();
     </script>
-
 </body>
 </html>
