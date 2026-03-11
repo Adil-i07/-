@@ -1,115 +1,586 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>เครื่องคำนวณ พันเก้าเล่า V2</title>
-  <style>
-    :root { --primary: #2c3e50; --accent: #3498db; --bg: #ecf0f1; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
-    .calc-card { background: #34495e; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 100%; max-width: 400px; color: white; }
-    .screen { background: #bdc3c7; color: #2c3e50; padding: 15px; border-radius: 10px; text-align: right; margin-bottom: 20px; min-height: 60px; }
-    .screen .val { font-size: 24px; font-weight: bold; display: block; }
-    .screen .unit { font-size: 14px; opacity: 0.8; }
-    .grid-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    button { padding: 15px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; transition: 0.2s; background: #5d6d7e; color: white; }
-    button:hover { opacity: 0.8; }
-    button.op { background: var(--accent); }
-    button.wide { grid-column: span 2; background: #e67e22; }
-    select { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; background: #ecf0f1; }
-    .label { font-size: 12px; margin-bottom: 5px; display: block; color: #bdc3c7; }
-    .result-area { margin-top: 20px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; font-size: 14px; }
-    footer { text-align: center; margin-top: 15px; font-size: 11px; color: #bdc3c7; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Tool App Pro</title>
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Libraries for Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            overflow: hidden;
+            height: 100dvh;
+        }
+        .rounded-xl-custom { border-radius: 24px; }
+        .rounded-2xl-custom { border-radius: 32px; }
+        
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+            z-index: 100;
+        }
+        
+        .unit-card {
+            background-color: #1e1e1e;
+            border-radius: 24px;
+            padding: clamp(12px, 4vw, 20px);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .unit-card:active { background-color: #252525; }
+        
+        .numpad-btn {
+            background-color: #1e1e1e;
+            border-radius: 50%;
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            cursor: pointer;
+            user-select: none;
+        }
+        .numpad-btn:active { background-color: #333; }
+        .numpad-btn-action { background-color: #2a2a2a; }
+
+        /* Letter Styling */
+        .paper-bg-white { background-color: #ffffff; color: #000; }
+        .paper-bg-black { background-color: #1a1a1a; color: #fff; }
+        .paper-lined {
+            background-image: linear-gradient(#e5e5e5 1px, transparent 1px);
+            background-size: 100% 2.5rem;
+        }
+        .paper-lined-dark {
+            background-image: linear-gradient(#333 1px, transparent 1px);
+            background-size: 100% 2.5rem;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Select Overlay */
+        .select-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+    </style>
 </head>
-<body>
+<body class="flex flex-col">
 
-<div class="calc-card">
-  <h2 style="text-align:center; margin-top:0;">พันเก้าเล่า Calc</h2>
-  
-  <label class="label">โหมดการวัด</label>
-  <select id="mode">
-    <option value="mass">น้ำหนัก (งอบ/เงิบ)</option>
-    <option value="length">ระยะทาง (ทาง/ทาบ)</option>
-    <option value="currency">เงิน (เจ๋ง/เหรียญ)</option>
-  </select>
+    <!-- Header -->
+    <header class="p-4 flex items-center justify-between shrink-0">
+        <button onclick="toggleSidebar()" class="p-2 hover:bg-white/10 rounded-full">
+            <span class="material-symbols-rounded">menu</span>
+        </button>
+        <h1 id="page-title" class="text-lg font-medium">จดหมาย</h1>
+        <div class="w-10"></div>
+    </header>
 
-  <div class="screen">
-    <div class="unit" id="unitDisplay">เตรียมคำนวณ...</div>
-    <div class="val" id="display">0</div>
-  </div>
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#1e1e1e] transform -translate-x-full shadow-2xl flex flex-col p-4">
+        <div class="flex justify-between items-center mb-8">
+            <span class="font-bold text-xl">เมนู</span>
+            <button onclick="toggleSidebar()" class="material-symbols-rounded">close</button>
+        </div>
+        <nav class="space-y-1">
+            <button onclick="switchMode('letter')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-colors">
+                <span class="material-symbols-rounded">mail</span> จดหมาย
+            </button>
+            <div class="px-4 pt-6 pb-2 text-xs text-gray-500 uppercase font-bold tracking-widest">หน่วยการวัด</div>
+            <button onclick="switchConverter('weight')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-colors">
+                <span class="material-symbols-rounded">weight</span> น้ำหนัก
+            </button>
+            <button onclick="switchConverter('distance')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-colors">
+                <span class="material-symbols-rounded">route</span> เส้นทาง
+            </button>
+            <button onclick="switchConverter('currency')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-colors">
+                <span class="material-symbols-rounded">payments</span> เงิน
+            </button>
+        </nav>
+    </div>
 
-  <div class="grid-btns">
-    <button onclick="press('7')">7</button><button onclick="press('8')">8</button><button onclick="press('9')">9</button>
-    <button class="op" onclick="setOp('kg')">KG</button>
-    
-    <button onclick="press('4')">4</button><button onclick="press('5')">5</button><button onclick="press('6')">6</button>
-    <button class="op" onclick="setOp('ngob')">งอบ</button>
-    
-    <button onclick="press('1')">1</button><button onclick="press('2')">2</button><button onclick="press('3')">3</button>
-    <button class="op" onclick="setOp('ngeib')">เงิบ</button>
-    
-    <button onclick="press('0')">0</button><button onclick="press('.')">.</button>
-    <button style="background:#c0392b" onclick="clr()">C</button>
-    <button class="op" onclick="calculate()">=</button>
-    
-    <button class="wide" onclick="calculate()">แปลงค่าทันที</button>
-    <button class="wide" style="background:#27ae60" id="jeungConvert">1 เจ๋ง = 0.6</button>
-  </div>
+    <!-- Main Content -->
+    <main id="app-container" class="flex-1 relative overflow-hidden flex flex-col h-full">
+        
+        <!-- SECTION: LETTER -->
+        <div id="mode-letter" class="flex-1 flex flex-col p-4 overflow-y-auto no-scrollbar">
+            <div class="max-w-xl mx-auto w-full space-y-4">
+                <div class="bg-[#1e1e1e] p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold">จัดการจดหมาย</h2>
+                        <p class="text-sm text-gray-400">จดหมายและซองจดหมายของคุณ</p>
+                    </div>
+                    <button onclick="window.open('https://adil-i07.github.io/POSTAL-CODE/', '_blank')" class="bg-blue-600 px-5 py-2.5 rounded-2xl text-sm font-medium whitespace-nowrap">
+                        ดูรหัสไปรษณีย์
+                    </button>
+                </div>
+                <div id="saved-letters" class="grid grid-cols-1 gap-3">
+                    <div class="text-center py-20 text-gray-600 flex flex-col items-center gap-2">
+                        <span class="material-symbols-rounded text-4xl">inventory_2</span>
+                        <p>ยังไม่มีจดหมายที่ถูกเก็บ</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="showSizePicker()" class="fixed bottom-8 right-8 w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all">
+                <span class="material-symbols-rounded text-3xl">add</span>
+            </button>
+        </div>
 
-  <div class="result-area" id="result">
-    รอกดตัวเลขและเลือกหน่วย...
-  </div>
+        <!-- SECTION: CONVERTER -->
+        <div id="mode-converter" class="hidden flex-1 flex flex-col p-4 overflow-hidden h-full">
+            <div class="flex-1 flex flex-col max-w-lg mx-auto w-full h-full justify-between pb-4">
+                <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="flex-1 space-y-3">
+                            <div class="unit-card flex flex-col" onclick="showUnitSelector('from')">
+                                <span class="text-xs text-gray-400 flex items-center gap-1 font-bold">
+                                    <span id="label-from-name">หน่วยหลัก</span> 
+                                    <span class="material-symbols-rounded text-sm">expand_more</span>
+                                </span>
+                                <div id="val-from" class="text-4xl font-light mt-2 text-teal-400 truncate">0</div>
+                            </div>
+                            <div class="unit-card flex flex-col" onclick="showUnitSelector('to')">
+                                <span class="text-xs text-gray-400 flex items-center gap-1 font-bold">
+                                    <span id="label-to-name">หน่วยแปลง</span> 
+                                    <span class="material-symbols-rounded text-sm">expand_more</span>
+                                </span>
+                                <div id="val-to" class="text-4xl font-light mt-2 truncate">0</div>
+                            </div>
+                        </div>
+                        <div class="w-full sm:w-20 bg-[#1e1e1e] rounded-3xl flex items-center justify-center cursor-pointer hover:bg-[#252525] py-4 sm:py-0" onclick="swapUnits()">
+                            <span class="material-symbols-rounded text-4xl text-gray-500">swap_vert</span>
+                        </div>
+                    </div>
+                    <p class="text-center text-[10px] text-gray-500 uppercase tracking-tighter">อัปเดตล่าสุด: <span id="current-time"></span></p>
+                </div>
 
-  <footer>ข้อมูล ยุคพันเก้าเล่า ที่มีการเปลี่ยนแปลง</footer>
-</div>
+                <!-- Numpad -->
+                <div class="grid grid-cols-4 gap-3 mt-4 h-3/5 sm:h-auto">
+                    <div onclick="pressKey('7')" class="numpad-btn">7</div>
+                    <div onclick="pressKey('8')" class="numpad-btn">8</div>
+                    <div onclick="pressKey('9')" class="numpad-btn">9</div>
+                    <div onclick="pressKey('AC')" class="numpad-btn numpad-btn-action text-red-400 text-lg font-bold">AC</div>
+                    
+                    <div onclick="pressKey('4')" class="numpad-btn">4</div>
+                    <div onclick="pressKey('5')" class="numpad-btn">5</div>
+                    <div onclick="pressKey('6')" class="numpad-btn">6</div>
+                    <div onclick="pressKey('00')" class="numpad-btn numpad-btn-action text-lg">00</div>
+                    
+                    <div onclick="pressKey('1')" class="numpad-btn">1</div>
+                    <div onclick="pressKey('2')" class="numpad-btn">2</div>
+                    <div onclick="pressKey('3')" class="numpad-btn">3</div>
+                    <div onclick="pressKey('DEL')" class="numpad-btn numpad-btn-action">
+                        <span class="material-symbols-rounded">backspace</span>
+                    </div>
+                    
+                    <div class="col-span-2 invisible"></div>
+                    <div onclick="pressKey('0')" class="numpad-btn">0</div>
+                    <div onclick="pressKey('.')" class="numpad-btn font-bold">.</div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-<script>
-  let currentInput = "";
-  const display = document.getElementById('display');
-  const resultArea = document.getElementById('result');
+    <!-- Modal: Size Picker -->
+    <div id="modal-size-picker" class="fixed inset-0 bg-black/90 flex items-end justify-center hidden z-[150]">
+        <div class="bg-[#1e1e1e] w-full max-w-xl rounded-t-[40px] p-8 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">ขนาดจดหมาย</h3>
+                <button onclick="hideModals()" class="p-2 bg-white/5 rounded-full"><span class="material-symbols-rounded">close</span></button>
+            </div>
+            <div class="grid gap-3" id="size-list">
+                <!-- Size Items -->
+            </div>
+        </div>
+    </div>
 
-  function press(num) {
-    currentInput += num;
-    display.innerText = currentInput;
-  }
+    <!-- Page: Editor -->
+    <div id="page-letter-editor" class="fixed inset-0 bg-[#121212] z-[140] hidden flex flex-col">
+        <div class="p-4 flex items-center justify-between border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <button onclick="hideEditor()" class="p-2 rounded-full hover:bg-white/5"><span class="material-symbols-rounded">arrow_back</span></button>
+                <div id="editor-title" class="text-sm font-bold opacity-70 truncate max-w-[150px]"></div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleEditorMenu()" class="p-2 rounded-full hover:bg-white/5"><span class="material-symbols-rounded">more_vert</span></button>
+                <button onclick="sendLetter()" class="bg-white text-black px-6 py-2 rounded-2xl text-sm font-bold active:scale-95 transition-transform">ส่ง</button>
+            </div>
+        </div>
+        
+        <div id="editor-menu" class="absolute top-16 right-4 bg-[#252525] rounded-3xl shadow-2xl p-3 hidden z-[160] w-52 border border-white/5">
+            <button onclick="changeBackground('white')" class="w-full text-left p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><span class="w-4 h-4 bg-white border rounded"></span> พื้นหลังขาว</button>
+            <button onclick="changeBackground('black')" class="w-full text-left p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><span class="w-4 h-4 bg-black border border-white/20 rounded"></span> พื้นหลังดำ</button>
+            <button onclick="changeBackground('lined')" class="w-full text-left p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><span class="material-symbols-rounded text-sm">notes</span> แบบมีเส้น</button>
+            <div class="h-px bg-white/10 my-2"></div>
+            <button onclick="showSizePicker()" class="w-full text-left p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><span class="material-symbols-rounded text-sm">aspect_ratio</span> เปลี่ยนขนาด</button>
+        </div>
 
-  function clr() {
-    currentInput = "";
-    display.innerText = "0";
-    resultArea.innerText = "ล้างข้อมูลแล้ว";
-  }
+        <div class="flex-1 overflow-y-auto p-4 sm:p-8 no-scrollbar bg-[#0f0f0f]" id="export-container">
+            <div id="paper" class="min-h-full p-8 sm:p-12 shadow-2xl mx-auto max-w-2xl flex flex-col paper-bg-white rounded-sm" contenteditable="true">
+                <div class="text-right mb-8">สถานที่เขียน: [ระบุตำแหน่งผู้ส่ง]</div>
+                <div class="text-right mb-8">วันที่: 11 มีนาคม 2569</div>
+                <div class="mb-8">คำขึ้นต้น: เรียน ...</div>
+                <div class="flex-1 mb-8 min-h-[300px]">
+                    เนื้อหา/ใจความ: พิมพ์ระบุจุดประสงค์ที่นี่...
+                </div>
+                <div class="text-right mt-12">คำลงท้าย: ขอแสดงความนับถือ</div>
+                <div class="text-right mb-16 font-bold">ลายเซ็น/ชื่อผู้เขียน</div>
+                
+                <hr class="border-dashed border-gray-300 my-12 opacity-50">
+                
+                <div class="border border-gray-200 p-8 rounded-lg relative min-h-[250px] bg-gray-50/5">
+                    <div class="text-xs sm:text-sm absolute top-6 left-6 max-w-[200px]">
+                        <strong>ผู้ส่ง:</strong><br>
+                        ชื่อ-ที่อยู่ผู้ส่ง...<br>
+                        รหัสไปรษณีย์:
+                    </div>
+                    <div class="mt-28 text-center mx-auto max-w-[280px]">
+                        <strong>ผู้รับ:</strong><br>
+                        ชื่อ-ที่อยู่ผู้รับ...<br>
+                        รหัสไปรษณีย์:
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  function calculate() {
-    let val = parseFloat(currentInput);
-    if (isNaN(val)) return;
+    <!-- Unit Selector Overlay -->
+    <div id="unit-selector" class="select-overlay">
+        <div class="bg-[#1e1e1e] w-full max-w-sm rounded-[40px] p-6 max-h-[70vh] flex flex-col border border-white/5">
+            <h3 class="text-lg font-bold mb-4 text-center">เลือกหน่วย</h3>
+            <div id="unit-options-list" class="overflow-y-auto space-y-2 no-scrollbar"></div>
+            <button onclick="closeUnitSelector()" class="mt-4 p-4 text-gray-500 font-bold uppercase tracking-widest text-xs">ยกเลิก</button>
+        </div>
+    </div>
 
-    let mode = document.getElementById('mode').value;
-    let resText = "";
+    <!-- Send Options -->
+    <div id="modal-send-options" class="fixed inset-0 bg-black/95 flex items-center justify-center hidden z-[200] p-6">
+        <div class="bg-[#1e1e1e] w-full max-w-xs rounded-[40px] p-8 space-y-6 border border-white/5">
+            <h3 class="text-xl font-bold text-center">ส่งจดหมาย</h3>
+            <div class="flex flex-col gap-3">
+                <button onclick="saveLetter()" class="w-full p-4 bg-white/5 rounded-2xl flex items-center justify-center gap-3 active:bg-white/10 transition-colors">
+                    <span class="material-symbols-rounded">inventory_2</span> เก็บในแอป
+                </button>
+                <button onclick="exportAsImage()" class="w-full p-4 bg-white text-black rounded-2xl flex items-center justify-center gap-3 font-bold active:scale-95 transition-transform">
+                    <span class="material-symbols-rounded">image</span> โหลดเป็นรูป
+                </button>
+                <button onclick="exportAsPDF()" class="w-full p-4 bg-blue-600 text-white rounded-2xl flex items-center justify-center gap-3 font-bold active:scale-95 transition-transform">
+                    <span class="material-symbols-rounded">picture_as_pdf</span> โหลดเป็น PDF
+                </button>
+                <button onclick="hideModals()" class="w-full p-2 text-gray-500 text-sm mt-2">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
 
-    if (mode === "mass") {
-      // 1 งอบ = 2kg, 1 เงิบ = 1g
-      let kg = val; 
-      resText = `${val} กิโล = ${val/2} งอบ | ${val*1000} เงิบ`;
-    } else if (mode === "length") {
-      // 1 ทาบ = 10m, 1 ทาง = 1000m
-      resText = `${val} เมตร = ${val/10} ทาบ | ${val/1000} ทาง`;
-    } else if (mode === "currency") {
-      // 1 เจ๋ง = 0.6 ตามคำสั่งใหม่
-      resText = `${val} เจ๋ง (เดิม) = ${val * 0.6} เจ๋ง (ใหม่)`;
+    <script>
+        // --- State ---
+        let state = {
+            mode: 'letter',
+            conv: 'weight',
+            input: '0',
+            unitFrom: null,
+            unitTo: null,
+            letters: [],
+            selectingFor: 'from'
+        };
+
+        const units = {
+            weight: [
+                { name: 'เจ๋ง', val: 1 },
+                { name: 'เหรียญ', val: 0.6 },
+                { name: 'โงบ', val: 1/50 }, // 1 โงบ = 50 เจ๋ง (assume based on 1000g logic)
+                { name: 'เมตริกตัน', val: 1/50 }, 
+                { name: 'งอบ', val: 10 },
+                { name: 'กิโลกรัม', val: 20 },
+                { name: 'เงิบ (กรัม)', val: 20000 },
+                { name: 'ง่อย', val: 20000000 }
+            ],
+            distance: [
+                { name: 'ทาง', val: 1 },
+                { name: 'เมตร', val: 1000 },
+                { name: 'ทาบ', val: 100 },
+                { name: 'เทียบ', val: 1000 },
+                { name: 'เซนติเมตร', val: 100000 },
+                { name: 'เกิบ', val: 10000 }
+            ],
+            currency: [
+                { name: 'เจ๋ง', val: 1 },
+                { name: 'ดอลลาร์ ($)', val: 0.6 },
+                { name: 'บาทไทย', val: 20 }
+            ]
+        };
+
+        const letterSizes = [
+            { id: 7, n: 'เบอร์ 7', s: '3.5" x 6.5"', d: 'นิยมใช้ใส่เงิน การ์ดขนาดเล็ก หรือจดหมายทั่วไป' },
+            { id: 9, n: 'เบอร์ 9', s: '4.25" x 9"', d: 'ขนาดมาตรฐานธุรกิจ หรือ A4 พับ 3 ตอน' },
+            { id: 10, n: 'เบอร์ 10', s: '4.125" x 9.5"', d: 'ซองยาวมาตรฐานที่นิยมใช้' },
+            { id: 'C6', n: 'ซอง C6', s: '4.5" x 6.375"', d: 'ใส่กระดาษ A4 พับ 4 ตอน (A6)' },
+            { id: 'C5', n: 'ซอง C5', s: '6.375" x 9"', d: 'ใส่ A4 พับครึ่ง หรือการ์ดแต่งงาน' },
+            { id: 'C4', n: 'ซอง C4', s: '9" x 12.75"', d: 'ใส่เอกสาร A4 ไม่พับ' },
+            { id: 'EX', n: 'ซองขยายข้าง', s: '9" x 12.75"', d: 'สำหรับเอกสารจำนวนมากหรือแคตตาล็อก' }
+        ];
+
+        // --- Init ---
+       window.onload = () => {
+
+    const saved = localStorage.getItem("letters");
+
+    if(saved){
+        state.letters = JSON.parse(saved);
+        renderSaved();
     }
 
-    resultArea.innerText = resText;
-  }
+    renderSizeList();
+    switchConverter('weight');
+    document.getElementById('current-time').innerText =
+    new Date().toLocaleTimeString('th-TH');
+}; 
 
-  // ฟังก์ชันพิเศษสำหรับ 1 เจ๋ง = 0.6 เจ๋ง
-  document.getElementById('jeungConvert').onclick = function() {
-    let val = parseFloat(currentInput) || 1;
-    let converted = val * 0.6;
-    resultArea.innerText = `แปลงเงิน: ${val} เจ๋ง => ${converted.toFixed(2)} เจ๋ง`;
-  };
-</script>
+        // --- UI Logic ---
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
 
+        function switchMode(m) {
+            state.mode = m;
+            document.getElementById('mode-letter').classList.toggle('hidden', m !== 'letter');
+            document.getElementById('mode-converter').classList.toggle('hidden', m !== 'converter');
+            document.getElementById('page-title').innerText = m === 'letter' ? 'จดหมาย' : 'หน่วยการวัด';
+            toggleSidebar();
+        }
+
+        function switchConverter(type) {
+            state.conv = type;
+            state.input = '0';
+            state.unitFrom = units[type][0];
+            state.unitTo = units[type][1];
+            switchMode('converter');
+            updateConverterUI();
+        }
+
+        function updateConverterUI() {
+            document.getElementById('label-from-name').innerText = state.unitFrom.name;
+            document.getElementById('label-to-name').innerText = state.unitTo.name;
+            document.getElementById('val-from').innerText = formatNum(state.input);
+            
+            let base = parseFloat(state.input) / state.unitFrom.val;
+            let result = base * state.unitTo.val;
+            document.getElementById('val-to').innerText = formatNum(result.toString());
+            document.getElementById('current-time').innerText = new Date().toLocaleTimeString('th-TH');
+        }
+
+        function formatNum(n) {
+            let num = parseFloat(n);
+            if (isNaN(num)) return '0';
+            return num.toLocaleString('th-TH', { maximumFractionDigits: 6 });
+        }
+
+        function pressKey(k) {
+            if (k === 'AC') state.input = '0';
+            else if (k === 'DEL') {
+                state.input = state.input.length > 1 ? state.input.slice(0, -1) : '0';
+            } else {
+                if (state.input === '0' && k !== '.') state.input = '';
+                if (k === '.' && state.input.includes('.')) return;
+                state.input += k;
+            }
+            updateConverterUI();
+        }
+
+        function swapUnits() {
+            [state.unitFrom, state.unitTo] = [state.unitTo, state.unitFrom];
+            updateConverterUI();
+        }
+
+        // --- Select Unit ---
+        function showUnitSelector(side) {
+            state.selectingFor = side;
+            const list = document.getElementById('unit-options-list');
+            list.innerHTML = units[state.conv].map(u => `
+                <button onclick="selectUnit('${u.name}')" class="w-full text-left p-5 rounded-3xl hover:bg-white/5 active:bg-white/10 transition-colors flex justify-between items-center">
+                    <span class="font-bold">${u.name}</span>
+                    ${(side === 'from' ? state.unitFrom.name : state.unitTo.name) === u.name ? '<span class="material-symbols-rounded text-teal-400">check_circle</span>' : ''}
+                </button>
+            `).join('');
+            document.getElementById('unit-selector').style.display = 'flex';
+        }
+
+        function selectUnit(name) {
+            const u = units[state.conv].find(x => x.name === name);
+            if (state.selectingFor === 'from') state.unitFrom = u;
+            else state.unitTo = u;
+            updateConverterUI();
+            closeUnitSelector();
+        }
+
+        function closeUnitSelector() {
+            document.getElementById('unit-selector').style.display = 'none';
+        }
+
+        // --- Letter Logic ---
+        function renderSizeList() {
+    document.getElementById('size-list').innerHTML =
+    letterSizes.map((s,i) => `
+        <button onclick="createLetterByIndex(${i})"
+        class="text-left p-5 rounded-3xl hover:bg-white/5 border border-white/5 active:scale-[0.98] transition-all">
+
+            <p class="font-bold text-lg">${s.n}
+            <span class="text-sm font-normal opacity-40">${s.s}</span></p>
+
+            <p class="text-xs text-gray-500 mt-1">${s.d}</p>
+
+        </button>
+    `).join('');
+}
+        function showSizePicker() {
+            document.getElementById('modal-size-picker').classList.remove('hidden');
+        }
+
+        function hideModals() {
+            document.querySelectorAll('[id^="modal-"]').forEach(m => m.classList.add('hidden'));
+        }
+
+        function createLetter(n, s) {
+            document.getElementById('editor-title').innerText = `${n} (${s})`;
+            document.getElementById('page-letter-editor').classList.remove('hidden');
+            hideModals();
+        }
+        function createLetterByIndex(i){
+    const s = letterSizes[i];
+    createLetter(s.n, s.s);
+}
+
+        function hideEditor() {
+            document.getElementById('page-letter-editor').classList.add('hidden');
+            document.getElementById('editor-menu').classList.add('hidden');
+        }
+
+        function toggleEditorMenu() {
+            document.getElementById('editor-menu').classList.toggle('hidden');
+        }
+
+        function changeBackground(t) {
+            const p = document.getElementById('paper');
+            p.classList.remove('paper-bg-white', 'paper-bg-black', 'paper-lined', 'paper-lined-dark');
+            if (t === 'white') p.classList.add('paper-bg-white');
+            if (t === 'black') p.classList.add('paper-bg-black');
+            if (t === 'lined') {
+                const isBlack = p.classList.contains('paper-bg-black');
+                p.classList.add(isBlack ? 'paper-lined-dark' : 'paper-lined');
+                p.classList.add(isBlack ? 'paper-bg-black' : 'paper-bg-white');
+            }
+            toggleEditorMenu();
+        }
+
+        function sendLetter() {
+            document.getElementById('modal-send-options').classList.remove('hidden');
+        }
+
+        // --- Export & Save ---
+       function saveLetter() {
+
+    const title = document.getElementById('editor-title').innerText;
+    const content = document.getElementById('paper').innerHTML;
+
+    const letter = {
+        id: Date.now(),
+        title,
+        content,
+        date: new Date().toLocaleDateString('th-TH')
+    };
+
+    state.letters.push(letter);
+
+    localStorage.setItem("letters", JSON.stringify(state.letters));
+
+    renderSaved();
+
+    hideModals();
+    hideEditor();
+}
+
+        function renderSaved() {
+
+    const container = document.getElementById('saved-letters');
+
+    if (state.letters.length === 0) return;
+
+    container.innerHTML = state.letters.map(l => `
+    
+    <div class="bg-[#1e1e1e] p-5 rounded-3xl flex justify-between items-center border border-white/5">
+
+        <div>
+            <div class="font-bold">${l.title}</div>
+            <div class="text-xs text-gray-500 mt-1">${l.date}</div>
+        </div>
+
+        <button onclick="editLetter(${l.id})"
+        class="p-2 bg-white/5 rounded-full">
+
+        <span class="material-symbols-rounded">edit</span>
+
+        </button>
+
+    </div>
+
+    `).reverse().join('');
+}
+
+        async function exportAsImage() {
+            hideModals();
+            const paper = document.getElementById('paper');
+            const canvas = await html2canvas(paper, { scale: 2, useCORS: true });
+            const link = document.createElement('a');
+            link.download = `จดหมาย_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        async function exportAsPDF() {
+            hideModals();
+            const { jsPDF } = window.jspdf;
+            const paper = document.getElementById('paper');
+            const canvas = await html2canvas(paper, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`จดหมาย_${Date.now()}.pdf`);
+        }
+
+     function editLetter(id){
+
+    const letter = state.letters.find(l => l.id === id);
+
+    if(!letter) return;
+
+    document.getElementById('editor-title').innerText = letter.title;
+    document.getElementById('paper').innerHTML = letter.content;
+
+    document.getElementById('page-letter-editor').classList.remove('hidden');
+    localStorage.setItem("letters", JSON.stringify(state.letters));
+
+}
+
+
+    </script>
 </body>
 </html>
-
