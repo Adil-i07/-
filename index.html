@@ -1,586 +1,152 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Tool App Pro</title>
-    <!-- Google Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Libraries for Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
-    <style>
-        body {
-            font-family: 'Noto Sans Thai', sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            overflow: hidden;
-            height: 100dvh;
-        }
-        .rounded-xl-custom { border-radius: 24px; }
-        .rounded-2xl-custom { border-radius: 32px; }
-        
-        #sidebar {
-            transition: transform 0.3s ease-in-out;
-            z-index: 100;
-        }
-        
-        .unit-card {
-            background-color: #1e1e1e;
-            border-radius: 24px;
-            padding: clamp(12px, 4vw, 20px);
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .unit-card:active { background-color: #252525; }
-        
-        .numpad-btn {
-            background-color: #1e1e1e;
-            border-radius: 50%;
-            aspect-ratio: 1/1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(1.2rem, 5vw, 1.8rem);
-            cursor: pointer;
-            user-select: none;
-        }
-        .numpad-btn:active { background-color: #333; }
-        .numpad-btn-action { background-color: #2a2a2a; }
-
-        /* Letter Styling */
-        .paper-bg-white { background-color: #ffffff; color: #000; }
-        .paper-bg-black { background-color: #1a1a1a; color: #fff; }
-        .paper-lined {
-            background-image: linear-gradient(#e5e5e5 1px, transparent 1px);
-            background-size: 100% 2.5rem;
-        }
-        .paper-lined-dark {
-            background-image: linear-gradient(#333 1px, transparent 1px);
-            background-size: 100% 2.5rem;
-        }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Select Overlay */
-        .select-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 200;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>เครื่องแปลงค่า</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#252627;--k:#6b6c6d;--kl:#9a9b9c;--or:#ff9500;--tx:#fff;--dim:#8a8b8c;--page:#111}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--page:#e6e6ea}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--page);font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif;color:var(--tx);padding:12px}
+.calc{width:100%;max-width:340px;background:var(--bg);border-radius:28px;padding:16px;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.calc{touch-action:none;user-select:none;-webkit-user-select:none;position:relative;overflow:hidden}
+.head{text-align:center;margin-bottom:6px}
+.title{font-size:16px;color:#ddd;min-height:22px}
+.dots{display:flex;justify-content:center;gap:6px;margin:6px 0 2px}
+.dots i{width:7px;height:7px;border-radius:50%;background:#4a4b4c;transition:.2s}
+.dots i.on{background:var(--or);width:18px;border-radius:4px}
+.hint{font-size:11px;color:var(--dim)}
+.row{transition:transform .25s,opacity .25s}
+.row.out-l{transform:translateX(-40px);opacity:0}.row.out-r{transform:translateX(40px);opacity:0}
+.toast{position:absolute;left:50%;top:14px;transform:translate(-50%,-80px);background:#fff;color:#111;padding:8px 14px;border-radius:18px;font-size:13px;transition:transform .3s;white-space:nowrap}
+.toast.show{transform:translate(-50%,0)}
+.row{text-align:right;padding:4px 6px}
+.num{font-size:48px;font-weight:300;line-height:1.1;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+#top .num{color:#e8e8e8}#bot .num{color:#9d9e9f}
+.sel{display:inline-flex;align-items:center;gap:4px;margin-top:2px;color:var(--dim);font-size:14px;position:relative}
+.sel select{background:#4a4b4c;color:#ddd;border:0;border-radius:6px;font:inherit;font-size:13px;padding:2px 4px;max-width:200px;cursor:pointer}
+.mid{display:flex;align-items:center;gap:10px;margin:6px 6px}
+.mid hr{flex:1;border:0;border-top:1px solid #3a3b3c;margin:0}
+.swap{background:none;border:0;color:var(--or);font-size:22px;cursor:pointer;padding:0}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.pad button{aspect-ratio:1;border:0;border-radius:50%;background:var(--k);color:#fff;font-size:28px;font-family:inherit;cursor:pointer;transition:filter .1s}
+.pad button:active{filter:brightness(1.35)}
+.pad .f{background:var(--kl)}.pad .o{background:var(--or);font-size:32px}.pad .o.act{background:#fff;color:var(--or)}
+</style>
 </head>
-<body class="flex flex-col">
+<body>
+<div class="calc">
+  <div class="toast" id="toast"></div>
+  <div class="head"><div class="title" id="title"></div><div class="dots" id="dots"></div><div class="hint">ปัดซ้าย/ขวาเปลี่ยนหมวด · ปัดขึ้นเพื่อแชร์ลิงก์</div></div>
+  <div class="row" id="top"><div class="num" id="n1">0</div><div class="sel"><select id="u1"></select></div></div>
+  <div class="mid"><button class="swap" id="swap" title="สลับ">⇅</button><hr></div>
+  <div class="row" id="bot"><div class="num" id="n2">0</div><div class="sel"><select id="u2"></select></div></div>
+  <div class="pad" id="pad"></div>
+</div>
+<script>
+const units = {
+  weight: [
+    { name: 'เจ๋ง', val: 1 },{ name: 'เหรียญ', val: 0.6 },{ name: 'โงบ', val: 1/50 },
+    { name: 'เมตริกตัน', val: 1/50 },{ name: 'งอบ', val: 10 },{ name: 'กิโลกรัม', val: 20 },
+    { name: 'เงิบ (กรัม)', val: 20000 },{ name: 'ง่อย', val: 20000000 }
+  ],
+  distance: [
+    { name: 'ทาง', val: 1 },{ name: 'เมตร', val: 1000 },{ name: 'ทาบ', val: 100 },
+    { name: 'เทียบ', val: 1000 },{ name: 'เซนติเมตร', val: 100000 },{ name: 'เกิบ', val: 10000 }
+  ],
+  currency: [
+    { name: 'เจ๋ง (J̵)', val: 1 },{ name: 'ดอลลาร์ ($)', val: 0.67 },{ name: 'บาทไทย (฿)', val: 20 }
+  ]
+};
+const cats = {weight:'น้ำหนัก',distance:'ระยะทาง',currency:'สกุลเงิน'};
+let cat='weight',cur='0',acc=null,op=null,fresh=false;
+const $=id=>document.getElementById(id);
+const sym={'÷':'÷','×':'×','−':'−','+':'+'};
 
-    <!-- Header -->
-    <header class="p-4 flex items-center justify-between shrink-0">
-        <button onclick="toggleSidebar()" class="p-2 hover:bg-white/10 rounded-full">
-            <span class="material-symbols-rounded">menu</span>
-        </button>
-        <h1 id="page-title" class="text-lg font-medium">จดหมาย</h1>
-        <div class="w-10"></div>
-    </header>
-
-    <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#1e1e1e] transform -translate-x-full shadow-2xl flex flex-col p-4">
-        <div class="flex justify-between items-center mb-8">
-            <span class="font-bold text-xl">เมนู</span>
-            <button onclick="toggleSidebar()" class="material-symbols-rounded">close</button>
-        </div>
-        <nav class="space-y-1">
-            <button onclick="switchMode('letter')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-colors">
-                <span class="material-symbols-rounded">mail</span> จดหมาย
-            </button>
-            <div class="px-4 pt-6 pb-2 text-xs text-gray-500 uppercase font-bold tracking-widest">หน่วยการวัด</div>
-            <button onclick="switchConverter('weight')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-colors">
-                <span class="material-symbols-rounded">weight</span> น้ำหนัก
-            </button>
-            <button onclick="switchConverter('distance')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-colors">
-                <span class="material-symbols-rounded">route</span> เส้นทาง
-            </button>
-            <button onclick="switchConverter('currency')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-colors">
-                <span class="material-symbols-rounded">payments</span> เงิน
-            </button>
-        </nav>
-    </div>
-
-    <!-- Main Content -->
-    <main id="app-container" class="flex-1 relative overflow-hidden flex flex-col h-full">
-        
-        <!-- SECTION: LETTER -->
-        <div id="mode-letter" class="flex-1 flex flex-col p-4 overflow-y-auto no-scrollbar">
-            <div class="max-w-xl mx-auto w-full space-y-4">
-                <div class="bg-[#1e1e1e] p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h2 class="text-xl font-bold">จัดการจดหมาย</h2>
-                        <p class="text-sm text-gray-400">จดหมายและซองจดหมายของคุณ</p>
-                    </div>
-                    <button onclick="window.open('https://adil-i07.github.io/POSTAL-CODE/', '_blank')" class="bg-blue-600 px-5 py-2.5 rounded-2xl text-sm font-medium whitespace-nowrap">
-                        ดูรหัสไปรษณีย์
-                    </button>
-                </div>
-                <div id="saved-letters" class="grid grid-cols-1 gap-3">
-                    <div class="text-center py-20 text-gray-600 flex flex-col items-center gap-2">
-                        <span class="material-symbols-rounded text-4xl">inventory_2</span>
-                        <p>ยังไม่มีจดหมายที่ถูกเก็บ</p>
-                    </div>
-                </div>
-            </div>
-            <button onclick="showSizePicker()" class="fixed bottom-8 right-8 w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all">
-                <span class="material-symbols-rounded text-3xl">add</span>
-            </button>
-        </div>
-
-        <!-- SECTION: CONVERTER -->
-        <div id="mode-converter" class="hidden flex-1 flex flex-col p-4 overflow-hidden h-full">
-            <div class="flex-1 flex flex-col max-w-lg mx-auto w-full h-full justify-between pb-4">
-                <div class="space-y-3">
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <div class="flex-1 space-y-3">
-                            <div class="unit-card flex flex-col" onclick="showUnitSelector('from')">
-                                <span class="text-xs text-gray-400 flex items-center gap-1 font-bold">
-                                    <span id="label-from-name">หน่วยหลัก</span> 
-                                    <span class="material-symbols-rounded text-sm">expand_more</span>
-                                </span>
-                                <div id="val-from" class="text-4xl font-light mt-2 text-teal-400 truncate">0</div>
-                            </div>
-                            <div class="unit-card flex flex-col" onclick="showUnitSelector('to')">
-                                <span class="text-xs text-gray-400 flex items-center gap-1 font-bold">
-                                    <span id="label-to-name">หน่วยแปลง</span> 
-                                    <span class="material-symbols-rounded text-sm">expand_more</span>
-                                </span>
-                                <div id="val-to" class="text-4xl font-light mt-2 truncate">0</div>
-                            </div>
-                        </div>
-                        <div class="w-full sm:w-20 bg-[#1e1e1e] rounded-3xl flex items-center justify-center cursor-pointer hover:bg-[#252525] py-4 sm:py-0" onclick="swapUnits()">
-                            <span class="material-symbols-rounded text-4xl text-gray-500">swap_vert</span>
-                        </div>
-                    </div>
-                    <p class="text-center text-[10px] text-gray-500 uppercase tracking-tighter">อัปเดตล่าสุด: <span id="current-time"></span></p>
-                </div>
-
-                <!-- Numpad -->
-                <div class="grid grid-cols-4 gap-3 mt-4 h-3/5 sm:h-auto">
-                    <div onclick="pressKey('7')" class="numpad-btn">7</div>
-                    <div onclick="pressKey('8')" class="numpad-btn">8</div>
-                    <div onclick="pressKey('9')" class="numpad-btn">9</div>
-                    <div onclick="pressKey('AC')" class="numpad-btn numpad-btn-action text-red-400 text-lg font-bold">AC</div>
-                    
-                    <div onclick="pressKey('4')" class="numpad-btn">4</div>
-                    <div onclick="pressKey('5')" class="numpad-btn">5</div>
-                    <div onclick="pressKey('6')" class="numpad-btn">6</div>
-                    <div onclick="pressKey('00')" class="numpad-btn numpad-btn-action text-lg">00</div>
-                    
-                    <div onclick="pressKey('1')" class="numpad-btn">1</div>
-                    <div onclick="pressKey('2')" class="numpad-btn">2</div>
-                    <div onclick="pressKey('3')" class="numpad-btn">3</div>
-                    <div onclick="pressKey('DEL')" class="numpad-btn numpad-btn-action">
-                        <span class="material-symbols-rounded">backspace</span>
-                    </div>
-                    
-                    <div class="col-span-2 invisible"></div>
-                    <div onclick="pressKey('0')" class="numpad-btn">0</div>
-                    <div onclick="pressKey('.')" class="numpad-btn font-bold">.</div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal: Size Picker -->
-    <div id="modal-size-picker" class="fixed inset-0 bg-black/90 flex items-end justify-center hidden z-[150]">
-        <div class="bg-[#1e1e1e] w-full max-w-xl rounded-t-[40px] p-8 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold">ขนาดจดหมาย</h3>
-                <button onclick="hideModals()" class="p-2 bg-white/5 rounded-full"><span class="material-symbols-rounded">close</span></button>
-            </div>
-            <div class="grid gap-3" id="size-list">
-                <!-- Size Items -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Page: Editor -->
-    <div id="page-letter-editor" class="fixed inset-0 bg-[#121212] z-[140] hidden flex flex-col">
-        <div class="p-4 flex items-center justify-between border-b border-white/5">
-            <div class="flex items-center gap-3">
-                <button onclick="hideEditor()" class="p-2 rounded-full hover:bg-white/5"><span class="material-symbols-rounded">arrow_back</span></button>
-                <div id="editor-title" class="text-sm font-bold opacity-70 truncate max-w-[150px]"></div>
-            </div>
-            <div class="flex items-center gap-2">
-                <button onclick="toggleEditorMenu()" class="p-2 rounded-full hover:bg-white/5"><span class="material-symbols-rounded">more_vert</span></button>
-                <button onclick="sendLetter()" class="bg-white text-black px-6 py-2 rounded-2xl text-sm font-bold active:scale-95 transition-transform">ส่ง</button>
-            </div>
-        </div>
-        
-        <div id="editor-menu" class="absolute top-16 right-4 bg-[#252525] rounded-3xl shadow-2xl p-3 hidden z-[160] w-52 border border-white/5">
-            <button onclick="changeBackground('white')" class="w-full text-left p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><span class="w-4 h-4 bg-white border rounded"></span> พื้นหลังขาว</button>
-            <button onclick="changeBackground('black')" class="w-full text-left p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><span class="w-4 h-4 bg-black border border-white/20 rounded"></span> พื้นหลังดำ</button>
-            <button onclick="changeBackground('lined')" class="w-full text-left p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><span class="material-symbols-rounded text-sm">notes</span> แบบมีเส้น</button>
-            <div class="h-px bg-white/10 my-2"></div>
-            <button onclick="showSizePicker()" class="w-full text-left p-3 hover:bg-white/5 rounded-xl flex items-center gap-3"><span class="material-symbols-rounded text-sm">aspect_ratio</span> เปลี่ยนขนาด</button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-4 sm:p-8 no-scrollbar bg-[#0f0f0f]" id="export-container">
-            <div id="paper" class="min-h-full p-8 sm:p-12 shadow-2xl mx-auto max-w-2xl flex flex-col paper-bg-white rounded-sm" contenteditable="true">
-                <div class="text-right mb-8">สถานที่เขียน: [ระบุตำแหน่งผู้ส่ง]</div>
-                <div class="text-right mb-8">วันที่: 11 มีนาคม 2569</div>
-                <div class="mb-8">คำขึ้นต้น: เรียน ...</div>
-                <div class="flex-1 mb-8 min-h-[300px]">
-                    เนื้อหา/ใจความ: พิมพ์ระบุจุดประสงค์ที่นี่...
-                </div>
-                <div class="text-right mt-12">คำลงท้าย: ขอแสดงความนับถือ</div>
-                <div class="text-right mb-16 font-bold">ลายเซ็น/ชื่อผู้เขียน</div>
-                
-                <hr class="border-dashed border-gray-300 my-12 opacity-50">
-                
-                <div class="border border-gray-200 p-8 rounded-lg relative min-h-[250px] bg-gray-50/5">
-                    <div class="text-xs sm:text-sm absolute top-6 left-6 max-w-[200px]">
-                        <strong>ผู้ส่ง:</strong><br>
-                        ชื่อ-ที่อยู่ผู้ส่ง...<br>
-                        รหัสไปรษณีย์:
-                    </div>
-                    <div class="mt-28 text-center mx-auto max-w-[280px]">
-                        <strong>ผู้รับ:</strong><br>
-                        ชื่อ-ที่อยู่ผู้รับ...<br>
-                        รหัสไปรษณีย์:
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Unit Selector Overlay -->
-    <div id="unit-selector" class="select-overlay">
-        <div class="bg-[#1e1e1e] w-full max-w-sm rounded-[40px] p-6 max-h-[70vh] flex flex-col border border-white/5">
-            <h3 class="text-lg font-bold mb-4 text-center">เลือกหน่วย</h3>
-            <div id="unit-options-list" class="overflow-y-auto space-y-2 no-scrollbar"></div>
-            <button onclick="closeUnitSelector()" class="mt-4 p-4 text-gray-500 font-bold uppercase tracking-widest text-xs">ยกเลิก</button>
-        </div>
-    </div>
-
-    <!-- Send Options -->
-    <div id="modal-send-options" class="fixed inset-0 bg-black/95 flex items-center justify-center hidden z-[200] p-6">
-        <div class="bg-[#1e1e1e] w-full max-w-xs rounded-[40px] p-8 space-y-6 border border-white/5">
-            <h3 class="text-xl font-bold text-center">ส่งจดหมาย</h3>
-            <div class="flex flex-col gap-3">
-                <button onclick="saveLetter()" class="w-full p-4 bg-white/5 rounded-2xl flex items-center justify-center gap-3 active:bg-white/10 transition-colors">
-                    <span class="material-symbols-rounded">inventory_2</span> เก็บในแอป
-                </button>
-                <button onclick="exportAsImage()" class="w-full p-4 bg-white text-black rounded-2xl flex items-center justify-center gap-3 font-bold active:scale-95 transition-transform">
-                    <span class="material-symbols-rounded">image</span> โหลดเป็นรูป
-                </button>
-                <button onclick="exportAsPDF()" class="w-full p-4 bg-blue-600 text-white rounded-2xl flex items-center justify-center gap-3 font-bold active:scale-95 transition-transform">
-                    <span class="material-symbols-rounded">picture_as_pdf</span> โหลดเป็น PDF
-                </button>
-                <button onclick="hideModals()" class="w-full p-2 text-gray-500 text-sm mt-2">ยกเลิก</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // --- State ---
-        let state = {
-            mode: 'letter',
-            conv: 'weight',
-            input: '0',
-            unitFrom: null,
-            unitTo: null,
-            letters: [],
-            selectingFor: 'from'
-        };
-
-        const units = {
-            weight: [
-                { name: 'เจ๋ง', val: 1 },
-                { name: 'เหรียญ', val: 0.6 },
-                { name: 'โงบ', val: 1/50 }, // 1 โงบ = 50 เจ๋ง (assume based on 1000g logic)
-                { name: 'เมตริกตัน', val: 1/50 }, 
-                { name: 'งอบ', val: 10 },
-                { name: 'กิโลกรัม', val: 20 },
-                { name: 'เงิบ (กรัม)', val: 20000 },
-                { name: 'ง่อย', val: 20000000 }
-            ],
-            distance: [
-                { name: 'ทาง', val: 1 },
-                { name: 'เมตร', val: 1000 },
-                { name: 'ทาบ', val: 100 },
-                { name: 'เทียบ', val: 1000 },
-                { name: 'เซนติเมตร', val: 100000 },
-                { name: 'เกิบ', val: 10000 }
-            ],
-            currency: [
-                { name: 'เจ๋ง', val: 1 },
-                { name: 'ดอลลาร์ ($)', val: 0.6 },
-                { name: 'บาทไทย', val: 20 }
-            ]
-        };
-
-        const letterSizes = [
-            { id: 7, n: 'เบอร์ 7', s: '3.5" x 6.5"', d: 'นิยมใช้ใส่เงิน การ์ดขนาดเล็ก หรือจดหมายทั่วไป' },
-            { id: 9, n: 'เบอร์ 9', s: '4.25" x 9"', d: 'ขนาดมาตรฐานธุรกิจ หรือ A4 พับ 3 ตอน' },
-            { id: 10, n: 'เบอร์ 10', s: '4.125" x 9.5"', d: 'ซองยาวมาตรฐานที่นิยมใช้' },
-            { id: 'C6', n: 'ซอง C6', s: '4.5" x 6.375"', d: 'ใส่กระดาษ A4 พับ 4 ตอน (A6)' },
-            { id: 'C5', n: 'ซอง C5', s: '6.375" x 9"', d: 'ใส่ A4 พับครึ่ง หรือการ์ดแต่งงาน' },
-            { id: 'C4', n: 'ซอง C4', s: '9" x 12.75"', d: 'ใส่เอกสาร A4 ไม่พับ' },
-            { id: 'EX', n: 'ซองขยายข้าง', s: '9" x 12.75"', d: 'สำหรับเอกสารจำนวนมากหรือแคตตาล็อก' }
-        ];
-
-        // --- Init ---
-       window.onload = () => {
-
-    const saved = localStorage.getItem("letters");
-
-    if(saved){
-        state.letters = JSON.parse(saved);
-        renderSaved();
-    }
-
-    renderSizeList();
-    switchConverter('weight');
-    document.getElementById('current-time').innerText =
-    new Date().toLocaleTimeString('th-TH');
-}; 
-
-        // --- UI Logic ---
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
-        }
-
-        function switchMode(m) {
-            state.mode = m;
-            document.getElementById('mode-letter').classList.toggle('hidden', m !== 'letter');
-            document.getElementById('mode-converter').classList.toggle('hidden', m !== 'converter');
-            document.getElementById('page-title').innerText = m === 'letter' ? 'จดหมาย' : 'หน่วยการวัด';
-            toggleSidebar();
-        }
-
-        function switchConverter(type) {
-            state.conv = type;
-            state.input = '0';
-            state.unitFrom = units[type][0];
-            state.unitTo = units[type][1];
-            switchMode('converter');
-            updateConverterUI();
-        }
-
-        function updateConverterUI() {
-            document.getElementById('label-from-name').innerText = state.unitFrom.name;
-            document.getElementById('label-to-name').innerText = state.unitTo.name;
-            document.getElementById('val-from').innerText = formatNum(state.input);
-            
-            let base = parseFloat(state.input) / state.unitFrom.val;
-            let result = base * state.unitTo.val;
-            document.getElementById('val-to').innerText = formatNum(result.toString());
-            document.getElementById('current-time').innerText = new Date().toLocaleTimeString('th-TH');
-        }
-
-        function formatNum(n) {
-            let num = parseFloat(n);
-            if (isNaN(num)) return '0';
-            return num.toLocaleString('th-TH', { maximumFractionDigits: 6 });
-        }
-
-        function pressKey(k) {
-            if (k === 'AC') state.input = '0';
-            else if (k === 'DEL') {
-                state.input = state.input.length > 1 ? state.input.slice(0, -1) : '0';
-            } else {
-                if (state.input === '0' && k !== '.') state.input = '';
-                if (k === '.' && state.input.includes('.')) return;
-                state.input += k;
-            }
-            updateConverterUI();
-        }
-
-        function swapUnits() {
-            [state.unitFrom, state.unitTo] = [state.unitTo, state.unitFrom];
-            updateConverterUI();
-        }
-
-        // --- Select Unit ---
-        function showUnitSelector(side) {
-            state.selectingFor = side;
-            const list = document.getElementById('unit-options-list');
-            list.innerHTML = units[state.conv].map(u => `
-                <button onclick="selectUnit('${u.name}')" class="w-full text-left p-5 rounded-3xl hover:bg-white/5 active:bg-white/10 transition-colors flex justify-between items-center">
-                    <span class="font-bold">${u.name}</span>
-                    ${(side === 'from' ? state.unitFrom.name : state.unitTo.name) === u.name ? '<span class="material-symbols-rounded text-teal-400">check_circle</span>' : ''}
-                </button>
-            `).join('');
-            document.getElementById('unit-selector').style.display = 'flex';
-        }
-
-        function selectUnit(name) {
-            const u = units[state.conv].find(x => x.name === name);
-            if (state.selectingFor === 'from') state.unitFrom = u;
-            else state.unitTo = u;
-            updateConverterUI();
-            closeUnitSelector();
-        }
-
-        function closeUnitSelector() {
-            document.getElementById('unit-selector').style.display = 'none';
-        }
-
-        // --- Letter Logic ---
-        function renderSizeList() {
-    document.getElementById('size-list').innerHTML =
-    letterSizes.map((s,i) => `
-        <button onclick="createLetterByIndex(${i})"
-        class="text-left p-5 rounded-3xl hover:bg-white/5 border border-white/5 active:scale-[0.98] transition-all">
-
-            <p class="font-bold text-lg">${s.n}
-            <span class="text-sm font-normal opacity-40">${s.s}</span></p>
-
-            <p class="text-xs text-gray-500 mt-1">${s.d}</p>
-
-        </button>
-    `).join('');
+function fmtIn(s){const [i,d]=s.split('.');const neg=i[0]==='-';const ii=(neg?i.slice(1):i).replace(/\B(?=(\d{3})+(?!\d))/g,',');return (neg?'-':'')+ii+(d!==undefined?'.'+d:'')}
+function fmtOut(x){
+  if(!isFinite(x))return 'ผิดพลาด';
+  if(x===0)return '0';
+  const a=Math.abs(x);
+  if(a>=1e15||a<1e-6)return x.toExponential(4);
+  let s=x.toLocaleString('en-US',{maximumFractionDigits:6});
+  return s;
 }
-        function showSizePicker() {
-            document.getElementById('modal-size-picker').classList.remove('hidden');
-        }
-
-        function hideModals() {
-            document.querySelectorAll('[id^="modal-"]').forEach(m => m.classList.add('hidden'));
-        }
-
-        function createLetter(n, s) {
-            document.getElementById('editor-title').innerText = `${n} (${s})`;
-            document.getElementById('page-letter-editor').classList.remove('hidden');
-            hideModals();
-        }
-        function createLetterByIndex(i){
-    const s = letterSizes[i];
-    createLetter(s.n, s.s);
+function fit(el){const l=el.textContent.length;el.style.fontSize=(l>12?Math.max(22,48-(l-12)*3):48)+'px'}
+function render(){
+  $('n1').textContent=fmtIn(cur);
+  const v=parseFloat(cur),a=units[cat][$('u1').selectedIndex],b=units[cat][$('u2').selectedIndex];
+  $('n2').textContent=fmtOut(v/a.val*b.val);
+  fit($('n1'));fit($('n2'));
+  document.querySelectorAll('.o[data-k]').forEach(b=>b.classList.toggle('act',fresh&&op===b.dataset.k));
 }
-
-        function hideEditor() {
-            document.getElementById('page-letter-editor').classList.add('hidden');
-            document.getElementById('editor-menu').classList.add('hidden');
-        }
-
-        function toggleEditorMenu() {
-            document.getElementById('editor-menu').classList.toggle('hidden');
-        }
-
-        function changeBackground(t) {
-            const p = document.getElementById('paper');
-            p.classList.remove('paper-bg-white', 'paper-bg-black', 'paper-lined', 'paper-lined-dark');
-            if (t === 'white') p.classList.add('paper-bg-white');
-            if (t === 'black') p.classList.add('paper-bg-black');
-            if (t === 'lined') {
-                const isBlack = p.classList.contains('paper-bg-black');
-                p.classList.add(isBlack ? 'paper-lined-dark' : 'paper-lined');
-                p.classList.add(isBlack ? 'paper-bg-black' : 'paper-bg-white');
-            }
-            toggleEditorMenu();
-        }
-
-        function sendLetter() {
-            document.getElementById('modal-send-options').classList.remove('hidden');
-        }
-
-        // --- Export & Save ---
-       function saveLetter() {
-
-    const title = document.getElementById('editor-title').innerText;
-    const content = document.getElementById('paper').innerHTML;
-
-    const letter = {
-        id: Date.now(),
-        title,
-        content,
-        date: new Date().toLocaleDateString('th-TH')
-    };
-
-    state.letters.push(letter);
-
-    localStorage.setItem("letters", JSON.stringify(state.letters));
-
-    renderSaved();
-
-    hideModals();
-    hideEditor();
+function calc(a,o,b){switch(o){case '+':return a+b;case '−':return a-b;case '×':return a*b;case '÷':return b===0?NaN:a/b}}
+function clean(n){return isNaN(n)?'0':String(parseFloat(n.toPrecision(12)))}
+function press(k){
+  if(/^\d$/.test(k)){if(fresh){cur='0';fresh=false}if(cur.replace(/[-.]/g,'').length>=12)return;cur=cur==='0'?k:cur==='-0'?'-'+k:cur+k}
+  else if(k==='.'){if(fresh){cur='0';fresh=false}if(!cur.includes('.'))cur+='.'}
+  else if(k==='AC'){cur='0';acc=null;op=null;fresh=false}
+  else if(k==='⌫'){if(fresh)return;cur=cur.length>1&&!(cur.length===2&&cur[0]==='-')?cur.slice(0,-1):'0'}
+  else if(k==='±'){cur=cur==='0'?'0':cur[0]==='-'?cur.slice(1):'-'+cur}
+  else if(k==='%'){cur=clean(parseFloat(cur)/100)}
+  else if(k==='='){if(op){cur=clean(calc(acc,op,parseFloat(cur)));op=null;acc=null;fresh=true}}
+  else{ // operator
+    if(op&&!fresh){cur=clean(calc(acc,op,parseFloat(cur)))}
+    acc=parseFloat(cur);op=k;fresh=true;
+  }
+  render();
 }
+const layout=[['⌫','f'],['AC','f'],['%','f'],['÷','o'],['7'],['8'],['9'],['×','o'],['4'],['5'],['6'],['−','o'],['1'],['2'],['3'],['+','o'],['±'],['0'],['.'],['=','o']];
+layout.forEach(([k,c])=>{const b=document.createElement('button');b.textContent=k;if(c)b.className=c;if(c==='o'&&k!=='=')b.dataset.k=k;b.onclick=()=>press(k);$('pad').appendChild(b)});
 
-        function renderSaved() {
-
-    const container = document.getElementById('saved-letters');
-
-    if (state.letters.length === 0) return;
-
-    container.innerHTML = state.letters.map(l => `
-    
-    <div class="bg-[#1e1e1e] p-5 rounded-3xl flex justify-between items-center border border-white/5">
-
-        <div>
-            <div class="font-bold">${l.title}</div>
-            <div class="text-xs text-gray-500 mt-1">${l.date}</div>
-        </div>
-
-        <button onclick="editLetter(${l.id})"
-        class="p-2 bg-white/5 rounded-full">
-
-        <span class="material-symbols-rounded">edit</span>
-
-        </button>
-
-    </div>
-
-    `).reverse().join('');
+function fillSelects(){
+  ['u1','u2'].forEach(id=>{$(id).innerHTML=units[cat].map((u,i)=>`<option value="${i}">${u.name}</option>`).join('')});
+  $('u1').selectedIndex=0;$('u2').selectedIndex=Math.min(1,units[cat].length-1);
 }
-
-        async function exportAsImage() {
-            hideModals();
-            const paper = document.getElementById('paper');
-            const canvas = await html2canvas(paper, { scale: 2, useCORS: true });
-            const link = document.createElement('a');
-            link.download = `จดหมาย_${Date.now()}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        }
-
-        async function exportAsPDF() {
-            hideModals();
-            const { jsPDF } = window.jspdf;
-            const paper = document.getElementById('paper');
-            const canvas = await html2canvas(paper, { scale: 2 });
-            const imgData = canvas.toDataURL('image/png');
-            
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`จดหมาย_${Date.now()}.pdf`);
-        }
-
-     function editLetter(id){
-
-    const letter = state.letters.find(l => l.id === id);
-
-    if(!letter) return;
-
-    document.getElementById('editor-title').innerText = letter.title;
-    document.getElementById('paper').innerHTML = letter.content;
-
-    document.getElementById('page-letter-editor').classList.remove('hidden');
-    localStorage.setItem("letters", JSON.stringify(state.letters));
-
+const keys=Object.keys(cats);
+keys.forEach(()=>$('dots').appendChild(document.createElement('i')));
+function paintHead(){$('title').textContent=cats[cat];[...$('dots').children].forEach((d,i)=>d.classList.toggle('on',keys[i]===cat))}
+function setCat(dir){
+  const i=(keys.indexOf(cat)+dir+keys.length)%keys.length;
+  const rows=document.querySelectorAll('.row');
+  rows.forEach(r=>r.classList.add(dir>0?'out-l':'out-r'));
+  setTimeout(()=>{
+    cat=keys[i];fillSelects();paintHead();render();
+    rows.forEach(r=>{r.style.transition='none';r.classList.remove('out-l','out-r');r.style.transform=`translateX(${dir>0?40:-40}px)`;r.style.opacity=0});
+    requestAnimationFrame(()=>requestAnimationFrame(()=>rows.forEach(r=>{r.style.transition='';r.style.transform='';r.style.opacity=''})));
+  },200);
 }
-
-
-    </script>
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
+async function share(){
+  const url=location.href;
+  try{if(navigator.share){await navigator.share({title:'เครื่องแปลงค่า',url});return}}catch(e){if(e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(url);toast('คัดลอกลิงก์แล้ว')}catch(e){toast('คัดลอกลิงก์จากแถบที่อยู่ได้เลย')}
+}
+let sx,sy,st,sw=false;
+const calc_=document.querySelector('.calc');
+calc_.addEventListener('pointerdown',e=>{if(e.target.tagName==='SELECT')return;sx=e.clientX;sy=e.clientY;st=Date.now();sw=true});
+calc_.addEventListener('pointerup',e=>{
+  if(!sw)return;sw=false;
+  const dx=e.clientX-sx,dy=e.clientY-sy;
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){setCat(dx<0?1:-1);suppress()}
+  else if(dy<-60&&Math.abs(dy)>Math.abs(dx)){share();suppress()}
+});
+calc_.addEventListener('pointercancel',()=>sw=false);
+let sup=false;function suppress(){sup=true;setTimeout(()=>sup=false,50)}
+calc_.addEventListener('click',e=>{if(sup){e.stopPropagation();e.preventDefault()}},true);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft')setCat(-1);else if(e.key==='ArrowRight')setCat(1);else if(e.key==='ArrowUp')share();
+});
+paintHead();
+$('u1').onchange=$('u2').onchange=render;
+$('swap').onclick=()=>{const i=$('u1').selectedIndex;$('u1').selectedIndex=$('u2').selectedIndex;$('u2').selectedIndex=i;render()};
+document.addEventListener('keydown',e=>{
+  const m={'*':'×','/':'÷','-':'−','+':'+','Enter':'=','=':'=','Backspace':'⌫','Escape':'AC','%':'%','.':'.'};
+  if(/^\d$/.test(e.key))press(e.key);else if(m[e.key]){e.preventDefault();press(m[e.key])}
+});
+fillSelects();render();
+</script>
 </body>
 </html>
