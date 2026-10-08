@@ -120,8 +120,10 @@ function setCat(dir){
 }
 let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
 async function share(){
-  const url=location.href;
-  try{if(navigator.share){await navigator.share({title:'เครื่องแปลงค่า',url});return}}catch(e){if(e.name==='AbortError')return}
+  const p=new URLSearchParams({c:cat,a:$('u1').selectedIndex,b:$('u2').selectedIndex,v:cur});
+  const url=location.href.split('#')[0]+'#'+p.toString();
+  const text=`${$('n1').textContent} ${units[cat][$('u1').selectedIndex].name} = ${$('n2').textContent} ${units[cat][$('u2').selectedIndex].name}`;
+  try{if(navigator.share){await navigator.share({title:'เครื่องแปลงค่า',text,url});return}}catch(e){if(e.name==='AbortError')return}
   try{await navigator.clipboard.writeText(url);toast('คัดลอกลิงก์แล้ว')}catch(e){toast('คัดลอกลิงก์จากแถบที่อยู่ได้เลย')}
 }
 let sx,sy,st,sw=false;
@@ -147,6 +149,20 @@ document.addEventListener('keydown',e=>{
   if(/^\d$/.test(e.key))press(e.key);else if(m[e.key]){e.preventDefault();press(m[e.key])}
 });
 fillSelects();render();
+(function restore(){
+  try{
+    const raw=location.hash.replace(/^#/,'')||location.search.replace(/^\?/,'');
+    if(!raw)return;
+    const p=new URLSearchParams(raw),c=p.get('c');
+    if(!units[c])return;
+    cat=c;fillSelects();
+    const n=units[c].length,a=+p.get('a'),b=+p.get('b'),v=p.get('v');
+    if(a>=0&&a<n)$('u1').selectedIndex=a;
+    if(b>=0&&b<n)$('u2').selectedIndex=b;
+    if(v&&/^-?\d{1,12}(\.\d*)?$/.test(v))cur=v;
+    paintHead();render();
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
