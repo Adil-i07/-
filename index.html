@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>เครื่องแปลงค่า</title>
+<title>เครื่องแปลงค่า・ใหม่</title>
 <link rel="icon" type="image/png" href="logo.png">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#252627;--k:#6b6c6d;--kl:#9a9b9c;--or:#ff9500;--tx:#fff;--dim:#8a8b8c;--page:#111}
@@ -43,17 +43,34 @@ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:c
 .btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .btns button{border:0;border-radius:20px;padding:10px 16px;font:inherit;font-size:14px;background:var(--k);color:#fff;cursor:pointer}
 .btns .p{background:var(--or)}
+.hint{min-height:14px}
+#grid[hidden]{display:none}
+#grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-height:min(62vh,440px);overflow-y:auto;touch-action:pan-y;padding:8px 2px;margin-top:6px;text-align:left}
+.tile{position:relative;padding:2px;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,var(--or),#ffc266);transition:transform .15s}
+.tile:active{transform:scale(.96)}
+.tile img{display:block;width:100%;aspect-ratio:3/2;object-fit:contain;background:rgba(255,255,255,.85);border-radius:12px;-webkit-user-drag:none;pointer-events:none}
+.tag{position:absolute;right:6px;bottom:6px;background:#fff;color:#111;border-radius:999px;padding:0 8px;font-weight:700;font-size:12px;pointer-events:none}
+#viewer{position:fixed;inset:0;z-index:25;touch-action:none;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s;user-select:none;-webkit-user-select:none}
+#viewer.open{opacity:1;visibility:visible}
+#vbg{position:absolute;inset:-15%;background-size:cover;background-position:center;filter:blur(46px) saturate(1.4);transform:scale(1.1)}
+#vshade{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+#vimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:6vmin;filter:drop-shadow(0 10px 30px rgba(0,0,0,.35));will-change:transform;-webkit-user-drag:none}
+#vhint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);text-align:center;color:#fff;font-size:13px;text-shadow:0 1px 6px rgba(0,0,0,.5);transition:opacity .6s;pointer-events:none;padding:0 16px}
 </style>
 </head>
 <body>
 <div class="calc">
   <div class="toast" id="toast"></div>
-  <div class="head"><div class="title" id="title"></div><div class="dots" id="dots"></div><div class="hint">ปัดซ้าย/ขวาเปลี่ยนหมวด · ปัดขึ้นเพื่อแชร์ลิงก์</div></div>
+  <div class="head"><div class="title" id="title"></div><div class="dots" id="dots"></div><div class="hint" id="hint"></div></div>
+  <div id="convBody">
   <div class="row" id="top"><div class="num" id="n1">0</div><div class="sel"><select id="u1"></select></div></div>
   <div class="mid"><button class="swap" id="swap" title="สลับ">⇅</button><hr></div>
   <div class="row" id="bot"><div class="num" id="n2">0</div><div class="sel"><select id="u2"></select></div></div>
   <div class="pad" id="pad"></div>
+  </div>
+  <div class="row" id="grid" hidden></div>
 </div>
+<div id="viewer" aria-label="ดูรูป"><div id="vbg"></div><div id="vshade"></div><img id="vimg" alt="" draggable="false"><div id="vhint">ปัดซ้าย/ขวาเปลี่ยนรูป · ปัดขึ้นแชร์ · ปัดลงย้อนกลับ</div></div>
 <div class="res" id="res" hidden><div id="card"></div><div class="path" id="path"></div><div class="btns"><button class="p" id="bShare">แชร์รูปคำตอบ</button><button id="bLink">คัดลอกลิงก์</button><button id="bOpen">เปิดเครื่องแปลง</button></div></div>
 <script>
 const units = {
@@ -70,7 +87,8 @@ const units = {
     { name: 'เจ๋ง (J̵)', code:'j', val: 1 },{ name: 'ดอลลาร์ ($)', code:'d', val: 0.67 },{ name: 'บาทไทย (฿)', code:'b', val: 20 }
   ]
 };
-const cats = {weight:'น้ำหนัก',distance:'ระยะทาง',currency:'สกุลเงิน'};
+units.money=[];
+const cats = {weight:'น้ำหนัก',distance:'ระยะทาง',currency:'สกุลเงิน',money:'รูปเงิน'};
 let cat='weight',cur='0',acc=null,op=null,fresh=false;
 const $=id=>document.getElementById(id);
 const sym={'÷':'÷','×':'×','−':'−','+':'+'};
@@ -86,6 +104,7 @@ function fmtOut(x){
 }
 function fit(el){const l=el.textContent.length;el.style.fontSize=(l>12?Math.max(22,48-(l-12)*3):48)+'px'}
 function render(){
+  applyMode();if(cat==='money')return;
   $('n1').textContent=fmtIn(cur);
   const v=parseFloat(cur),a=units[cat][$('u1').selectedIndex],b=units[cat][$('u2').selectedIndex];
   $('n2').textContent=fmtOut(v/a.val*b.val);
@@ -117,7 +136,7 @@ function fillSelects(){
 }
 const keys=Object.keys(cats);
 keys.forEach(()=>$('dots').appendChild(document.createElement('i')));
-function paintHead(){$('title').textContent=cats[cat];[...$('dots').children].forEach((d,i)=>d.classList.toggle('on',keys[i]===cat))}
+function paintHead(){$('hint').textContent=cat==='money'?'ปัดซ้าย/ขวาเปลี่ยนหมวด · แตะรูปเพื่อดู/แชร์':'ปัดซ้าย/ขวาเปลี่ยนหมวด · ปัดขึ้นเพื่อแชร์ลิงก์';$('title').textContent=cats[cat];[...$('dots').children].forEach((d,i)=>d.classList.toggle('on',keys[i]===cat))}
 function setCat(dir){
   const i=(keys.indexOf(cat)+dir+keys.length)%keys.length;
   const rows=document.querySelectorAll('.row');
@@ -132,7 +151,7 @@ let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('sho
 const CATS={w:'weight',d:'distance',c:'currency'};
 function numTok(x){return String(x).replace(/\.$/,'').replace('-','m').replace('.','p')}
 function catKey(){return Object.keys(CATS).find(k=>CATS[k]===cat)}
-function link(){return location.origin+location.pathname+'#'+catKey()+'-'+units[cat][$('u1').selectedIndex].code+'-'+units[cat][$('u2').selectedIndex].code+'-'+numTok(cur)}
+function link(){if(cat==='money')return location.origin+location.pathname+'#m'+($('viewer').classList.contains('open')?'-'+MONEY[vi].replace('.','p'):'');return location.origin+location.pathname+'#'+catKey()+'-'+units[cat][$('u1').selectedIndex].code+'-'+units[cat][$('u2').selectedIndex].code+'-'+numTok(cur)}
 function svgCard(){
   const a=units[cat][$('u1').selectedIndex],b=units[cat][$('u2').selectedIndex];
   const out=fmtOut(parseFloat(cur)/a.val*b.val),inp=fmtIn(cur.replace(/\.$/,''));
@@ -157,7 +176,15 @@ function parseRoute(){
   const c=CATS[m[1].toLowerCase()],a=units[c].findIndex(u=>u.code===m[2].toLowerCase()),b=units[c].findIndex(u=>u.code===m[3].toLowerCase());
   return a<0||b<0?null:{c,a,b,n:m[4]};
 }
+function parseMoney(){
+  let t=null;
+  try{const p=decodeURIComponent(location.pathname).match(/(?:^|\/)m(?:\/(\d+(?:\.\d+)?))?\/?$/);if(p)t=p[1]||''}catch(e){}
+  if(t===null){const h=location.hash.match(/^#m(?:-(\d+(?:p\d+)?))?$/i);if(h)t=(h[1]||'').replace('p','.')}
+  return t===null?null:{i:t?MONEY.indexOf(t):-1};
+}
 function route(){
+  const mr=parseMoney();
+  if(mr){cat='money';paintHead();render();$('res').hidden=true;if(mr.i>=0)openViewer(mr.i);return}
   const r=parseRoute();if(!r)return;
   cat=r.c;fillSelects();$('u1').selectedIndex=r.a;$('u2').selectedIndex=r.b;
   cur=r.n;acc=null;op=null;fresh=false;paintHead();render();
@@ -187,6 +214,59 @@ document.addEventListener('keydown',e=>{
   const m={'*':'×','/':'÷','-':'−','+':'+','Enter':'=','=':'=','Backspace':'⌫','Escape':'AC','%':'%','.':'.'};
   if(/^\d$/.test(e.key))press(e.key);else if(m[e.key]){e.preventDefault();press(m[e.key])}
 });
+const MONEY=['0.5','2','3','6','10','20','50','100','400','1000','5000','10000'];
+function applyMode(){const m=cat==='money';$('convBody').hidden=m;$('grid').hidden=!m}
+$('grid').innerHTML=MONEY.map((m,i)=>`<div class="tile" data-i="${i}" role="img" aria-label="ธนบัตร ${m}"><img src="${m}.png" alt="" draggable="false" loading="lazy"><span class="tag">${m}</span></div>`).join('');
+$('grid').addEventListener('click',e=>{const t=e.target.closest('.tile');if(t)openViewer(+t.dataset.i)});
+const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src});
+const mfiles=new Map();
+function moneyFile(i){
+  if(!mfiles.has(i))mfiles.set(i,(async()=>{
+    const url=MONEY[i]+'.png';
+    try{const r=await fetch(url);if(r.ok)return new File([await r.blob()],url,{type:'image/png'})}catch(_){}
+    try{const img=await loadImg(url),c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);
+      const b=await new Promise((res,rej)=>{try{c.toBlob(x=>x?res(x):rej(),'image/png')}catch(e){rej(e)}});return new File([b],url,{type:'image/png'})}catch(_){return null}
+  })());
+  return mfiles.get(i);
+}
+async function shareFile(file,fb){
+  try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'เครื่องแปลงค่า'});return}}catch(e){if(e&&e.name==='AbortError')return}
+  const a=document.createElement('a'),u=file?URL.createObjectURL(file):fb;a.href=u;a.download=file?file.name:fb;document.body.appendChild(a);a.click();a.remove();
+  if(file)setTimeout(()=>URL.revokeObjectURL(u),4000);toast('เบราว์เซอร์นี้แชร์ไม่ได้ จึงบันทึกรูปให้แทน');
+}
+const viewer=$('viewer'),vimg=$('vimg'),vbg=$('vbg');
+let vi=0,busy=false,drag=null,hintShown=false;
+function setViewer(i){vi=(i+MONEY.length)%MONEY.length;const src=MONEY[vi]+'.png';vimg.src=src;vbg.style.backgroundImage=`url("${src}")`;vimg.alt='ธนบัตร '+MONEY[vi];moneyFile(vi);try{history.replaceState(null,'','#m-'+MONEY[vi].replace('.','p'))}catch(_){}}
+function openViewer(i){setViewer(i);vimg.style.transform='';viewer.classList.add('open');const h=$('vhint');h.style.opacity=1;if(!hintShown){hintShown=true;setTimeout(()=>h.style.opacity=0,3000)}else h.style.opacity=0}
+function closeViewer(){viewer.classList.remove('open');vimg.style.transform='';try{history.replaceState(null,'','#m')}catch(_){}}
+async function vnav(dir){
+  if(busy)return;busy=true;const W=innerWidth;
+  const out=vimg.animate([{transform:vimg.style.transform||'none'},{transform:`translateX(${-dir*W}px)`,opacity:.2}],{duration:150,easing:'ease-in',fill:'forwards'});
+  await out.finished;vimg.style.transform=`translateX(${dir*W}px)`;out.cancel();setViewer(vi+dir);
+  try{await vimg.decode()}catch(_){}
+  vimg.style.transform='';
+  await vimg.animate([{transform:`translateX(${dir*W}px)`,opacity:.2},{transform:'none',opacity:1}],{duration:200,easing:'ease-out'}).finished;busy=false;
+}
+async function shareCurrent(){
+  if(busy)return;busy=true;
+  const a=vimg.animate([{transform:vimg.style.transform||'none'},{transform:'translateY(-14vh)',opacity:.5}],{duration:160,fill:'forwards'});
+  const f=await moneyFile(vi);await shareFile(f,MONEY[vi]+'.png');a.cancel();vimg.style.transform='';
+  await vimg.animate([{transform:'translateY(8vh)',opacity:.4},{transform:'none',opacity:1}],{duration:200,easing:'ease-out'}).finished;busy=false;
+}
+function springBack(){vimg.style.transition='transform .2s ease-out';vimg.style.transform='';setTimeout(()=>vimg.style.transition='',220)}
+viewer.addEventListener('pointerdown',e=>{if(busy)return;drag={x:e.clientX,y:e.clientY};viewer.setPointerCapture(e.pointerId);vimg.style.transition=''});
+viewer.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;vimg.style.transform=Math.abs(dx)>Math.abs(dy)?`translateX(${dx}px)`:`translateY(${dy}px)`});
+viewer.addEventListener('pointerup',e=>{
+  if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag=null;const T=60;
+  if(Math.abs(dx)>Math.abs(dy)){if(Math.abs(dx)>T)return vnav(dx<0?1:-1)}
+  else if(dy<-T)return shareCurrent();else if(dy>T)return closeViewer();
+  springBack();
+});
+viewer.addEventListener('pointercancel',()=>{drag=null;springBack()});
+addEventListener('keydown',e=>{
+  if(!viewer.classList.contains('open'))return;e.stopImmediatePropagation();
+  if(e.key==='ArrowLeft')vnav(-1);else if(e.key==='ArrowRight')vnav(1);else if(e.key==='ArrowUp')shareCurrent();else if(e.key==='ArrowDown'||e.key==='Escape')closeViewer();
+},true);
 fillSelects();render();route();
 window.addEventListener('hashchange',route);
 $('bShare').onclick=()=>share(true);
