@@ -6,7 +6,7 @@
 <title>เครื่องแปลงค่า・ใหม่</title>
 <link rel="icon" type="image/png" href="logo.png">
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#252627;--k:#6b6c6d;--kl:#9a9b9c;--or:#ffffff;--tx:#fff;--dim:#8a8b8c;--page:#111}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#252627;--k:#6b6c6d;--kl:#9a9b9c;--or:#C9F98D;--tx:#fff;--dim:#8a8b8c;--page:#111}
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--page:#e6e6ea}}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -157,7 +157,7 @@ function svgCard(){
   const out=fmtOut(parseFloat(cur)/a.val*b.val),inp=fmtIn(cur.replace(/\.$/,''));
   const e=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
   const fs=Math.max(36,Math.min(96,900/Math.max(out.length,1)));
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="600" height="340" font-family="Sukhumvit Set,Noto Sans Thai,sans-serif"><rect width="600" height="340" rx="28" fill="#252627"/><text x="40" y="70" fill="#9a9b9c" font-size="26">${e(cats[cat])} · ${e(inp)} ${e(a.name)}</text><text x="40" y="125" fill="#ffffff" font-size="40">=</text><text x="40" y="225" fill="#fff" font-size="${fs}" font-weight="300">${e(out)}</text><text x="40" y="285" fill="#ffffff" font-size="30">${e(b.name)}</text><text x="560" y="315" fill="#6b6c6d" font-size="16" text-anchor="end">เครื่องแปลงค่า</text></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="600" height="340" font-family="Sukhumvit Set,Noto Sans Thai,sans-serif"><rect width="600" height="340" rx="28" fill="#252627"/><text x="40" y="70" fill="#9a9b9c" font-size="26">${e(cats[cat])} · ${e(inp)} ${e(a.name)}</text><text x="40" y="125" fill="#C9F98D" font-size="40">=</text><text x="40" y="225" fill="#fff" font-size="${fs}" font-weight="300">${e(out)}</text><text x="40" y="285" fill="#C9F98D" font-size="30">${e(b.name)}</text><text x="560" y="315" fill="#6b6c6d" font-size="16" text-anchor="end">เครื่องแปลงค่า</text></svg>`;
 }
 function png(){return new Promise(r=>{try{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=1200;c.height=680;c.getContext('2d').drawImage(i,0,0,1200,680);c.toBlob(b=>r(b?new File([b],'result.png',{type:'image/png'}):null))};i.onerror=()=>r(null);i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgCard())}catch(e){r(null)}})}
 async function share(img){
