@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ConvertFT</title> <link rel="icon" type="image/png" href="logo.png">
+<title>เครื่องแปลงค่า</title>
+<link rel="icon" type="image/png" href="logo.png">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#252627;--k:#6b6c6d;--kl:#9a9b9c;--or:#ff9500;--tx:#fff;--dim:#8a8b8c;--page:#111}
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--page:#e6e6ea}}
@@ -34,6 +35,14 @@ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:c
 .pad button{aspect-ratio:1;border:0;border-radius:50%;background:var(--k);color:#fff;font-size:28px;font-family:inherit;cursor:pointer;transition:filter .1s}
 .pad button:active{filter:brightness(1.35)}
 .pad .f{background:var(--kl)}.pad .o{background:var(--or);font-size:32px}.pad .o.act{background:#fff;color:var(--or)}
+.toast{position:fixed;z-index:30;top:calc(14px + env(safe-area-inset-top,0px))}
+.res{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--page);padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.res[hidden]{display:none}
+#card{width:100%;max-width:420px}#card svg{width:100%;height:auto;display:block;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.path{font-size:13px;color:var(--dim);font-family:ui-monospace,monospace}
+.btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btns button{border:0;border-radius:20px;padding:10px 16px;font:inherit;font-size:14px;background:var(--k);color:#fff;cursor:pointer}
+.btns .p{background:var(--or)}
 </style>
 </head>
 <body>
@@ -45,19 +54,20 @@ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:c
   <div class="row" id="bot"><div class="num" id="n2">0</div><div class="sel"><select id="u2"></select></div></div>
   <div class="pad" id="pad"></div>
 </div>
+<div class="res" id="res" hidden><div id="card"></div><div class="path" id="path"></div><div class="btns"><button class="p" id="bShare">แชร์รูปคำตอบ</button><button id="bLink">คัดลอกลิงก์</button><button id="bOpen">เปิดเครื่องแปลง</button></div></div>
 <script>
 const units = {
   weight: [
-    { name: 'เจ๋ง', val: 1 },{ name: 'เหรียญ', val: 0.6 },{ name: 'โงบ', val: 1/50 },
-    { name: 'เมตริกตัน', val: 1/50 },{ name: 'งอบ', val: 10 },{ name: 'กิโลกรัม', val: 20 },
-    { name: 'เงิบ (กรัม)', val: 20000 },{ name: 'ง่อย', val: 20000000 }
+    { name: 'เจ๋ง', code:'j', val: 1 },{ name: 'เหรียญ', code:'c', val: 0.6 },{ name: 'โงบ', code:'o', val: 1/50 },
+    { name: 'เมตริกตัน', code:'t', val: 1/50 },{ name: 'งอบ', code:'n', val: 10 },{ name: 'กิโลกรัม', code:'k', val: 20 },
+    { name: 'เงิบ (กรัม)', code:'g', val: 20000 },{ name: 'ง่อย', code:'y', val: 20000000 }
   ],
   distance: [
-    { name: 'ทาง', val: 1 },{ name: 'เมตร', val: 1000 },{ name: 'ทาบ', val: 100 },
-    { name: 'เทียบ', val: 1000 },{ name: 'เซนติเมตร', val: 100000 },{ name: 'เกิบ', val: 10000 }
+    { name: 'ทาง', code:'t', val: 1 },{ name: 'เมตร', code:'m', val: 1000 },{ name: 'ทาบ', code:'b', val: 100 },
+    { name: 'เทียบ', code:'p', val: 1000 },{ name: 'เซนติเมตร', code:'c', val: 100000 },{ name: 'เกิบ', code:'k', val: 10000 }
   ],
   currency: [
-    { name: 'เจ๋ง (Ɉ̄)', val: 1 },{ name: 'ดอลลาร์ ($)', val: 0.67 },{ name: 'บาทไทย (฿)', val: 20 }
+    { name: 'เจ๋ง (J̵)', code:'j', val: 1 },{ name: 'ดอลลาร์ ($)', code:'d', val: 0.67 },{ name: 'บาทไทย (฿)', code:'b', val: 20 }
   ]
 };
 const cats = {weight:'น้ำหนัก',distance:'ระยะทาง',currency:'สกุลเงิน'};
@@ -102,7 +112,7 @@ const layout=[['⌫','f'],['AC','f'],['%','f'],['÷','o'],['7'],['8'],['9'],['×
 layout.forEach(([k,c])=>{const b=document.createElement('button');b.textContent=k;if(c)b.className=c;if(c==='o'&&k!=='=')b.dataset.k=k;b.onclick=()=>press(k);$('pad').appendChild(b)});
 
 function fillSelects(){
-  ['u1','u2'].forEach(id=>{$(id).innerHTML=units[cat].map((u,i)=>`<option value="${i}">${u.name}</option>`).join('')});
+  ['u1','u2'].forEach(id=>{$(id).innerHTML=units[cat].map((u,i)=>`<option value="${i}">${u.name} · ${u.code}</option>`).join('')});
   $('u1').selectedIndex=0;$('u2').selectedIndex=Math.min(1,units[cat].length-1);
 }
 const keys=Object.keys(cats);
@@ -119,12 +129,41 @@ function setCat(dir){
   },200);
 }
 let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
-async function share(){
-  const p=new URLSearchParams({c:cat,a:$('u1').selectedIndex,b:$('u2').selectedIndex,v:cur});
-  const url=location.href.split('#')[0]+'#'+p.toString();
-  const text=`${$('n1').textContent} ${units[cat][$('u1').selectedIndex].name} = ${$('n2').textContent} ${units[cat][$('u2').selectedIndex].name}`;
-  try{if(navigator.share){await navigator.share({title:'เครื่องแปลงค่า',text,url});return}}catch(e){if(e.name==='AbortError')return}
+const CATS={w:'weight',d:'distance',c:'currency'};
+function numTok(x){return String(x).replace(/\.$/,'').replace('-','m').replace('.','p')}
+function catKey(){return Object.keys(CATS).find(k=>CATS[k]===cat)}
+function link(){return location.origin+location.pathname+'#'+catKey()+'-'+units[cat][$('u1').selectedIndex].code+'-'+units[cat][$('u2').selectedIndex].code+'-'+numTok(cur)}
+function svgCard(){
+  const a=units[cat][$('u1').selectedIndex],b=units[cat][$('u2').selectedIndex];
+  const out=fmtOut(parseFloat(cur)/a.val*b.val),inp=fmtIn(cur.replace(/\.$/,''));
+  const e=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const fs=Math.max(36,Math.min(96,900/Math.max(out.length,1)));
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="600" height="340" font-family="Sukhumvit Set,Noto Sans Thai,sans-serif"><rect width="600" height="340" rx="28" fill="#252627"/><text x="40" y="70" fill="#9a9b9c" font-size="26">${e(cats[cat])} · ${e(inp)} ${e(a.name)}</text><text x="40" y="125" fill="#ff9500" font-size="40">=</text><text x="40" y="225" fill="#fff" font-size="${fs}" font-weight="300">${e(out)}</text><text x="40" y="285" fill="#ff9500" font-size="30">${e(b.name)}</text><text x="560" y="315" fill="#6b6c6d" font-size="16" text-anchor="end">เครื่องแปลงค่า</text></svg>`;
+}
+function png(){return new Promise(r=>{try{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=1200;c.height=680;c.getContext('2d').drawImage(i,0,0,1200,680);c.toBlob(b=>r(b?new File([b],'result.png',{type:'image/png'}):null))};i.onerror=()=>r(null);i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgCard())}catch(e){r(null)}})}
+async function share(img){
+  const url=link();
+  try{
+    if(img){const f=await png();if(f&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'เครื่องแปลงค่า',url});return}}
+    if(navigator.share){await navigator.share({title:'เครื่องแปลงค่า',url});return}
+  }catch(e){if(e.name==='AbortError')return}
   try{await navigator.clipboard.writeText(url);toast('คัดลอกลิงก์แล้ว')}catch(e){toast('คัดลอกลิงก์จากแถบที่อยู่ได้เลย')}
+}
+function parseRoute(){
+  let m=null;
+  try{m=decodeURIComponent(location.pathname).match(/([wdc])=([a-z]+)=([a-z]+)\/(-?\d+(?:\.\d+)?)/i)}catch(e){}
+  if(!m){m=location.hash.match(/^#([wdc])-([a-z]+)-([a-z]+)-(m?\d+(?:p\d+)?)/i);if(m){m=[...m];m[4]=m[4].replace('m','-').replace('p','.')}}
+  if(!m)return null;
+  const c=CATS[m[1].toLowerCase()],a=units[c].findIndex(u=>u.code===m[2].toLowerCase()),b=units[c].findIndex(u=>u.code===m[3].toLowerCase());
+  return a<0||b<0?null:{c,a,b,n:m[4]};
+}
+function route(){
+  const r=parseRoute();if(!r)return;
+  cat=r.c;fillSelects();$('u1').selectedIndex=r.a;$('u2').selectedIndex=r.b;
+  cur=r.n;acc=null;op=null;fresh=false;paintHead();render();
+  $('card').innerHTML=svgCard();
+  $('path').textContent='/'+catKey()+'='+units[cat][r.a].code+'='+units[cat][r.b].code+'/'+cur;
+  $('res').hidden=false;
 }
 let sx,sy,st,sw=false;
 const calc_=document.querySelector('.calc');
@@ -148,21 +187,11 @@ document.addEventListener('keydown',e=>{
   const m={'*':'×','/':'÷','-':'−','+':'+','Enter':'=','=':'=','Backspace':'⌫','Escape':'AC','%':'%','.':'.'};
   if(/^\d$/.test(e.key))press(e.key);else if(m[e.key]){e.preventDefault();press(m[e.key])}
 });
-fillSelects();render();
-(function restore(){
-  try{
-    const raw=location.hash.replace(/^#/,'')||location.search.replace(/^\?/,'');
-    if(!raw)return;
-    const p=new URLSearchParams(raw),c=p.get('c');
-    if(!units[c])return;
-    cat=c;fillSelects();
-    const n=units[c].length,a=+p.get('a'),b=+p.get('b'),v=p.get('v');
-    if(a>=0&&a<n)$('u1').selectedIndex=a;
-    if(b>=0&&b<n)$('u2').selectedIndex=b;
-    if(v&&/^-?\d{1,12}(\.\d*)?$/.test(v))cur=v;
-    paintHead();render();
-  }catch(e){}
-})();
+fillSelects();render();route();
+window.addEventListener('hashchange',route);
+$('bShare').onclick=()=>share(true);
+$('bLink').onclick=()=>share(false);
+$('bOpen').onclick=()=>{$('res').hidden=true;history.replaceState(null,'',location.pathname)};
 </script>
 </body>
 </html>
